@@ -12,10 +12,23 @@ const projects = await getCollection("projects");
   <div class="grid list-none gap-4 p-0">
     {
       projects.map((project) => (
-        <ExternalLink href={project.data.href}>
-          {project.data.title}
-        </ExternalLink>
+        <div>
+          <ExternalLink href={project.data.href}>
+            {project.data.title}
+          </ExternalLink>
+          <p class="prose m-0 text-sm opacity-90">{project.data.description}</p>
+        </div>
       ))
     }
   </div>
+
+  <h2
+    class="text-muted-text dark:text-dark-muted-text mt-6 mb-3 text-lg font-bold"
+  >
+    Toolbox
+  </h2>
+  <p>
+    JS/TS, Solidity, Go, Rust, Python • React/Next • Viem/Ethers •
+    TheGraph/Substreams • Chainlink • EigenLayer • RabbitMQ • TailwindCSS
+  </p>
 </section>

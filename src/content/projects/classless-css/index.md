@@ -1,5 +1,5 @@
 ---
-title: Classless CSS
-description: Instantly preview drop-in CSS themes.
-href: https://classlesscss.com/
+title: Liquidity Oracle
+description: Uniswap v4 Hooks + EigenLayer AVS oracle providing spread, depth, HHI, and liquidity forecasts; Rust/TypeScript indexer and React dashboard.
+href: https://github.com/Suryansh-23/liquidity-oracle
 ---

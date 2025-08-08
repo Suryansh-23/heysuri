@@ -82,7 +82,8 @@
 
 <script data-astro-rerun is:inline>
   (function () {
-    const theme = localStorage.getItem("currentTheme") || "system";
+    // Default to light when no preference is saved
+    const theme = localStorage.getItem("currentTheme") || "light";
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)",
     ).matches;
@@ -103,7 +104,8 @@
   type Theme = "light" | "dark" | "system" | null;
 
   function getCurrentTheme(): Theme {
-    return (localStorage.getItem("currentTheme") ?? "system") as Theme;
+    // Default fallback is light (not system) so first load is always light
+    return (localStorage.getItem("currentTheme") ?? "light") as Theme;
   }
 
   function updateTheme(theme: Theme): void {

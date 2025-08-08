@@ -1,0 +1,39 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SeoPage from "@/components/SeoPage.astro";
+import { getCollection } from "astro:content";
+
+// Casting to "any" to avoid type issues during content type generation
+const jobs: any = await getCollection("work" as any);
+---
+
+<BaseLayout>
+  <SeoPage slot="head" title="Work" />
+  <section class="py-3">
+    <h2 class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold">
+      Work Experience
+    </h2>
+    <div class="grid list-none gap-6 p-0">
+      {
+        jobs.map((job: any) => (
+          <div class="prose">
+            <h3 class="m-0">
+              {job.data.role} — {job.data.company}
+            </h3>
+            <p class="m-0 text-sm opacity-90">{job.data.start} – {job.data.end}</p>
+            <p class="m-0">{job.data.description}</p>
+            {job.data?.highlights && (
+              <ul class="mt-2">
+                {job.data.highlights.map((h: string) => (
+                  <li>{h}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+
