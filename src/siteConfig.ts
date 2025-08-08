@@ -26,6 +26,10 @@ export const NAV_LINKS: NavigationLinks = {
     path: "/work",
     label: "Work",
   },
+  hello: {
+    path: "/hello",
+    label: "Say hello",
+  },
 };
 
 export const SOCIAL_LINKS: SocialLinks = {
@@ -42,7 +46,7 @@ export const SOCIAL_LINKS: SocialLinks = {
     href: "https://www.linkedin.com/in/suryansh23/",
   },
   twitter: {
-    label: "X (formerly Twitter)",
+    label: "X",
     href: "https://x.com/SuriPuri23",
   },
 };

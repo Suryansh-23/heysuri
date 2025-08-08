@@ -1,0 +1,11 @@
+---
+const builtAt = import.meta.env.BUILT_AT ?? new Date().toISOString();
+const date = new Date(builtAt);
+const formatted = date.toLocaleDateString(undefined, {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+---
+
+{formatted}

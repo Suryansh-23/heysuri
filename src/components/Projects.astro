@@ -27,8 +27,22 @@ const projects = await getCollection("projects");
   >
     Toolbox
   </h2>
-  <p>
-    JS/TS, Solidity, Go, Rust, Python • React/Next • Viem/Ethers •
-    TheGraph/Substreams • Chainlink • EigenLayer • RabbitMQ • TailwindCSS
-  </p>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="prose">
+      <h3 class="m-0 text-base">Languages</h3>
+      <p class="m-0 text-sm opacity-90">JS/TS, Solidity, Go, Rust, Python</p>
+    </div>
+    <div class="prose">
+      <h3 class="m-0 text-base">Frontend</h3>
+      <p class="m-0 text-sm opacity-90">React, Next.js, Tailwind CSS</p>
+    </div>
+    <div class="prose">
+      <h3 class="m-0 text-base">Smart contracts & Web3</h3>
+      <p class="m-0 text-sm opacity-90">Viem, Ethers, Chainlink, EigenLayer</p>
+    </div>
+    <div class="prose">
+      <h3 class="m-0 text-base">Data & infra</h3>
+      <p class="m-0 text-sm opacity-90">TheGraph/Substreams, RabbitMQ</p>
+    </div>
+  </div>
 </section>

@@ -4,13 +4,31 @@ import SeoPage from "@/components/SeoPage.astro";
 import { getCollection } from "astro:content";
 
 // Casting to "any" to avoid type issues during content type generation
-const jobs: any = await getCollection("work" as any);
+const allJobs: any[] = await getCollection("work" as any);
+
+function toTime(value?: string): number {
+  if (!value) return 0;
+  if (/present/i.test(value)) return Number.MAX_SAFE_INTEGER;
+  const date = new Date(value);
+  return isNaN(date.valueOf()) ? 0 : date.valueOf();
+}
+
+const jobs = allJobs.sort((a, b) => {
+  const aEnd = toTime(a?.data?.end);
+  const bEnd = toTime(b?.data?.end);
+  if (aEnd !== bEnd) return bEnd - aEnd; // Most recent end (or Present) first
+  const aStart = toTime(a?.data?.start);
+  const bStart = toTime(b?.data?.start);
+  return bStart - aStart; // Then by start date
+});
 ---
 
 <BaseLayout>
   <SeoPage slot="head" title="Work" />
   <section class="py-3">
-    <h2 class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold">
+    <h2
+      class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold"
+    >
       Work Experience
     </h2>
     <div class="grid list-none gap-6 p-0">
@@ -20,7 +38,9 @@ const jobs: any = await getCollection("work" as any);
             <h3 class="m-0">
               {job.data.role} — {job.data.company}
             </h3>
-            <p class="m-0 text-sm opacity-90">{job.data.start} – {job.data.end}</p>
+            <p class="m-0 text-sm opacity-90">
+              {job.data.start} – {job.data.end}
+            </p>
             <p class="m-0">{job.data.description}</p>
             {job.data?.highlights && (
               <ul class="mt-2">
@@ -35,5 +55,3 @@ const jobs: any = await getCollection("work" as any);
     </div>
   </section>
 </BaseLayout>
-
-

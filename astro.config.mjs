@@ -13,5 +13,8 @@ export default defineConfig({
   site: "https://barebones.superwebthemes.com",
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      "import.meta.env.BUILT_AT": JSON.stringify(new Date().toISOString()),
+    },
   },
 });

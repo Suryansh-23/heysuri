@@ -1,0 +1,18 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SeoPage from "@/components/SeoPage.astro";
+import SocialLinks from "@/components/SocialLinks.astro";
+---
+
+<BaseLayout>
+  <SeoPage slot="head" title="Say hello" description="Ways to reach Suryansh" />
+
+  <section class="prose py-3">
+    <p>
+      If you're building something interesting or want to jam on DeFi, agents,
+      or mechanism design, say hello—always happy to connect.
+    </p>
+  </section>
+
+  <SocialLinks />
+</BaseLayout>

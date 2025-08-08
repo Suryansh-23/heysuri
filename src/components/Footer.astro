@@ -1,5 +1,7 @@
 ---
 import { SITE } from "@/siteConfig";
+import { formatDate } from "@/lib/util";
+import GitHash from "./GitHash.astro";
 import ThemeToggle from "@/components/ThemeToggle.astro";
 
 const year = new Date().getFullYear();
@@ -9,5 +11,8 @@ const year = new Date().getFullYear();
   class="mx-auto flex w-full flex-col items-start gap-6 pt-16 pb-24 sm:flex-row sm:items-center sm:justify-between sm:gap-8"
 >
   <ThemeToggle />
-  <span class="prose mt-2 block">{year} {SITE.author}</span>
+  <div class="prose mt-2">
+    <span class="block">{year} {SITE.author}</span>
+    <span class="block text-sm opacity-80">Last updated <GitHash /></span>
+  </div>
 </footer>
