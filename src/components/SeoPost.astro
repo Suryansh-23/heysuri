@@ -3,7 +3,7 @@ import { type CollectionEntry } from "astro:content";
 import { SITE } from "@/siteConfig";
 
 const { entry } = Astro.props;
-const post = entry as CollectionEntry<"blog">;
+const post = entry as CollectionEntry<"notes">;
 
 const postTitle = post.data.title || SITE.title;
 const postDescription = post.data.description || SITE.description;

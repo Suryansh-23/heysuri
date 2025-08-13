@@ -14,7 +14,7 @@ export const SITE: SiteConfiguration = {
 };
 
 export const NAV_LINKS: NavigationLinks = {
-  blog: {
+  notes: {
     path: "/notes",
     label: "Notes",
   },

@@ -9,12 +9,12 @@ import SeoPost from "@/components/SeoPost.astro";
 import { formatDate } from "@/lib/util";
 
 interface Props {
-  entry: CollectionEntry<"blog">;
+  entry: CollectionEntry<"notes">;
 }
 
 export async function getStaticPaths() {
-  const blog = await getCollection("blog");
-  return blog.map((entry) => ({
+  const notes = await getCollection("notes");
+  return notes.map((entry) => ({
     params: { id: entry.id },
     props: { entry },
   }));
