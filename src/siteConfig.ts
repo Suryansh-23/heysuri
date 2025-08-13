@@ -30,6 +30,10 @@ export const NAV_LINKS: NavigationLinks = {
     path: "/hello",
     label: "Say hello",
   },
+  sidequests: {
+    path: "/side-quests",
+    label: "Side quests",
+  },
 };
 
 export const SOCIAL_LINKS: SocialLinks = {

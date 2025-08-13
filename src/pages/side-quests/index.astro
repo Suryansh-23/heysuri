@@ -1,0 +1,159 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SeoPage from "@/components/SeoPage.astro";
+
+console.log("hi");
+
+const spotifyProfileUrl =
+  "https://open.spotify.com/user/31qmudpyninfrj3achycpojfzhae";
+
+// Array of playlist IDs to randomly select from
+const playlistIds = [
+  "4yRA6jHWjhQ20Yun5z0JMY", // Original playlist
+  "2ruIFwo67YArGjNKqSYZ4f", // New playlist 1
+  "1BdMhNsZi3kHsmJnoQmSS1", // New playlist 2
+];
+
+// Randomly select a playlist
+const randomPlaylistId =
+  playlistIds[Math.floor(Math.random() * playlistIds.length)];
+const spotifyEmbedUrl = `https://open.spotify.com/embed/playlist/${randomPlaylistId}?utm_source=generator&theme=0`;
+
+const letterboxdUser = "LaLaAmour";
+const letterboxdUrl = `https://letterboxd.com/${letterboxdUser}/`;
+const letterboxdRss = `https://letterboxd.com/${letterboxdUser}/rss/`;
+---
+
+<BaseLayout>
+  <SeoPage
+    slot="head"
+    title="Side quests"
+    description="Music and cinema that inspire me."
+  />
+
+  <section class="py-3">
+    <h2
+      class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold"
+    >
+      Music
+    </h2>
+    <div class="prose">
+      <p>
+        Tunes that keep me shipping. I lean indie and hip-hop with quality
+        productions, with detours into jazz, rock & film scores.
+      </p>
+    </div>
+    <div class="border-muted-text/10 mt-3 overflow-hidden rounded-md">
+      <iframe
+        style="display:block;border:0;width:100%;height:352px;border-radius:0"
+        src={spotifyEmbedUrl}
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"></iframe>
+    </div>
+    <p class="prose mt-2 text-sm">
+      Follow on <a href={spotifyProfileUrl} target="_blank" rel="noreferrer"
+        >Spotify</a
+      >.
+    </p>
+  </section>
+
+  <hr
+    class="border-muted-text dark:border-dark-muted-text my-12 border-[0.5px] opacity-10 dark:opacity-15"
+  />
+
+  <section class="py-3">
+    <h2
+      class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold"
+    >
+      Cinema
+    </h2>
+    <div class="prose">
+      <p>
+        I love quirky character pieces, hard on the head sci-fi stuff, and a bit
+        of everything. This is where I log and reflect on what I watch.
+      </p>
+    </div>
+
+    <div class="border-muted-text/10 mt-3 rounded-md border p-4">
+      <p class="prose m-0">
+        Film diary lives on <a
+          href={letterboxdUrl}
+          target="_blank"
+          rel="noreferrer">Letterboxd</a
+        >.
+      </p>
+      <div id="recent-films" class="prose mt-3 hidden">
+        <h3 class="m-0 text-base">Recent diary</h3>
+        <ul></ul>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ letterboxdRss }}>
+    (() => {
+      const TTL_MS = 60 * 60 * 1000; // 1 hour
+      const storageKey = `recentFilms:${letterboxdRss}`;
+
+      const container = document.getElementById("recent-films");
+      const ul = container?.querySelector("ul");
+      const render = (items) => {
+        if (!container || !ul || !items?.length) return;
+        ul.innerHTML = items
+          .map(
+            (f) =>
+              `<li><a href="${f.link}" target="_blank" rel="noreferrer">${f.title}</a></li>`,
+          )
+          .join("");
+        container.classList.remove("hidden");
+      };
+
+      const now = Date.now();
+      let cached = null;
+
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) cached = JSON.parse(raw);
+      } catch {}
+
+      const hasFreshCache =
+        cached && typeof cached.expiry === "number" && cached.expiry > now;
+
+      if (hasFreshCache) {
+        render(cached.data);
+        return;
+      } else if (cached?.data?.length) {
+        // Show stale cache immediately, then refresh in background
+        render(cached.data);
+      }
+
+      (async () => {
+        try {
+          const res = await fetch(
+            `https://api.cors.lol/?url=${encodeURIComponent(letterboxdRss)}`,
+          );
+          const rssText = await res.text();
+          const matches = [
+            ...rssText.matchAll(
+              /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>/g,
+            ),
+          ];
+          const recentFilms = matches
+            .slice(0, 4)
+            .map((m) => ({ title: m[1], link: m[2] }));
+
+          if (recentFilms.length) {
+            render(recentFilms);
+            try {
+              localStorage.setItem(
+                storageKey,
+                JSON.stringify({ data: recentFilms, expiry: now + TTL_MS }),
+              );
+            } catch {}
+          }
+        } catch {
+          // On failure, keep whatever is rendered (stale or hidden)
+        }
+      })();
+    })();
+  </script>
+</BaseLayout>

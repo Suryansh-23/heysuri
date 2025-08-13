@@ -5,13 +5,31 @@ import Post from "@/components/Post.astro";
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.publicationDate.valueOf() - a.data.publicationDate.valueOf(),
 );
+
+interface Props {
+  emptyMessage?: string;
+}
+
+const {
+  emptyMessage = "No notes yet. I'm dealing with dilemma of choice right now.",
+} = Astro.props as Props;
 ---
 
 <section class="py-3">
   <h2 class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold">
     Notes
   </h2>
-  <div class="grid list-none gap-4 p-0">
-    {posts.map((post) => <Post post={post} />)}
-  </div>
+  {
+    posts.length > 0 ? (
+      <div class="grid list-none gap-4 p-0">
+        {posts.map((post) => (
+          <Post post={post} />
+        ))}
+      </div>
+    ) : (
+      <div class="prose text-muted-text dark:text-dark-muted-text text-sm">
+        <p>{emptyMessage}</p>
+      </div>
+    )
+  }
 </section>
