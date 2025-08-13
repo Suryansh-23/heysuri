@@ -10,7 +10,7 @@ export default defineConfig({
       theme: "dark-plus",
     },
   },
-  site: "https://barebones.superwebthemes.com",
+  site: "https://heysuri.eth.limo/",
   vite: {
     plugins: [tailwindcss()],
     define: {
