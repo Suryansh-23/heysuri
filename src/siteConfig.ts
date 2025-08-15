@@ -7,7 +7,7 @@ import type {
 export const SITE: SiteConfiguration = {
   title: "Suri",
   description:
-    "Web3 Full‑Stack Developer building DeFi simulators, blockchain data infra, and intent‑based dApps.",
+    "Web3 Full-Stack Developer building DeFi simulators, blockchain data infra, and intent-based dApps.",
   href: "https://example.com",
   author: "Suri",
   locale: "en-IN",
