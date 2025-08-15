@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 
-// IPFS Integration - Handles dynamic IPFS root detection and asset path resolution
+// IPFS Integration - Handles IPFS asset path resolution during build time
 function ipfsIntegration() {
   return {
     name: "ipfs-integration",
@@ -12,8 +12,56 @@ function ipfsIntegration() {
       "astro:build:done": async ({ dir, logger }) => {
         logger.info("Processing HTML files for IPFS compatibility...");
 
-        // Client-side script that detects IPFS root and fixes asset paths and navigation links
-        const ipfsScript = `
+        // Process all HTML files recursively
+        async function processDirectory(dirPath, depth = 0) {
+          const { readdirSync, statSync } = await import("fs");
+          const { join } = await import("path");
+
+          const entries = readdirSync(dirPath);
+
+          for (const entry of entries) {
+            const fullPath = join(dirPath, entry);
+            const stat = statSync(fullPath);
+
+            if (stat.isDirectory()) {
+              await processDirectory(fullPath, depth + 1);
+            } else if (entry === "index.html") {
+              try {
+                let content = readFileSync(fullPath, "utf-8");
+                let originalContent = readFileSync(fullPath, "utf-8");
+                let modified = false;
+
+                // Fix CSS asset paths - convert relative paths to absolute from current directory
+                // Pattern: href="../file.css" or href="../../file.css" -> href="./file.css"
+                content = content.replace(
+                  /href="([\.\/]+)([a-zA-Z_.0-9]+)"/g,
+                  `href="${depth == 0 ? "./" : "../".repeat(depth)}$2"`,
+                );
+
+                // Fix JS asset paths - convert relative paths to absolute from current directory
+                content = content.replace(
+                  /src="(\.\.\/)+([^"]+\.js)"/g,
+                  'src="./$2"',
+                );
+
+                // Check if we made any modifications
+                if (content !== originalContent) {
+                  modified = true;
+                }
+
+                if (modified) {
+                  writeFileSync(fullPath, content);
+                  logger.info(`Fixed asset paths in: ${fullPath}`);
+                }
+              } catch (error) {
+                logger.error(`Failed to process ${fullPath}: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        // Client-side script for navigation links only (keeping assets out)
+        const navigationScript = `
 <script>
 (function() {
   // Detect if we're on IPFS and get the root path
@@ -29,35 +77,11 @@ function ipfsIntegration() {
     return '/';
   }
   
-  // Fix asset paths and navigation links on page load
-  function fixPaths() {
+  // Fix navigation links on page load (assets are now fixed at build time)
+  function fixNavigationLinks() {
     var root = getIPFSRoot();
     
     if (root !== '/') {
-      // Fix all _astro asset links (CSS, JS, etc.)
-      var assetLinks = document.querySelectorAll('link[href*="_astro/"], script[src*="_astro/"]');
-      assetLinks.forEach(function(element) {
-        var attr = element.tagName === 'LINK' ? 'href' : 'src';
-        var path = element.getAttribute(attr);
-        
-        // Convert relative paths to absolute from IPFS root
-        if (path && path.indexOf('_astro/') !== -1) {
-          if (path.indexOf('../') === 0) {
-            // Remove any ../../../ prefixes and make it absolute from IPFS root
-            path = path.replace(/^(\\.\\.\\/)+/g, '');
-          } else if (path.indexOf('/') !== 0) {
-            // If it's already relative, leave it as is for now
-            return;
-          }
-          
-          // Ensure it starts from the IPFS root
-          if (path.indexOf(root) !== 0) {
-            var cleanPath = path.indexOf('/') === 0 ? path.substring(1) : path;
-            element.setAttribute(attr, root + cleanPath);
-          }
-        }
-      });
-      
       // Fix internal navigation links (routes like /notes, /projects, etc.)
       var navLinks = document.querySelectorAll('a[href]');
       navLinks.forEach(function(link) {
@@ -77,8 +101,6 @@ function ipfsIntegration() {
         // Check if it's an internal route (starts with /)
         if (href.indexOf('/') === 0) {
           // Internal routes that should be prefixed with IPFS root
-          // Common routes: /, /notes, /projects, /work, /hello, /side-quests
-          // Also handle dynamic routes like /notes/some-note-id
           var isInternalRoute = 
             href === '/' ||
             href.indexOf('/notes') === 0 ||
@@ -103,15 +125,15 @@ function ipfsIntegration() {
   
   // Run on DOM ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', fixPaths);
+    document.addEventListener('DOMContentLoaded', fixNavigationLinks);
   } else {
-    fixPaths();
+    fixNavigationLinks();
   }
 })();
 </script>`;
 
-        // Process all HTML files recursively
-        async function processDirectory(dirPath) {
+        // Now process directories and inject navigation script
+        async function processDirectoryWithScript(dirPath) {
           const { readdirSync, statSync } = await import("fs");
           const { join } = await import("path");
 
@@ -122,29 +144,39 @@ function ipfsIntegration() {
             const stat = statSync(fullPath);
 
             if (stat.isDirectory()) {
-              await processDirectory(fullPath);
+              await processDirectoryWithScript(fullPath);
             } else if (entry === "index.html") {
               try {
                 let content = readFileSync(fullPath, "utf-8");
 
-                // Inject the IPFS script before closing </head>
-                if (content.includes("</head>")) {
+                // Inject the navigation script before closing </head>
+                if (
+                  content.includes("</head>") &&
+                  !content.includes("getIPFSRoot()")
+                ) {
                   content = content.replace(
                     "</head>",
-                    ipfsScript + "\n</head>",
+                    navigationScript + "\n</head>",
                   );
                   writeFileSync(fullPath, content);
-                  logger.info(`Processed: ${fullPath}`);
+                  logger.info(`Added navigation script to: ${fullPath}`);
                 }
               } catch (error) {
-                logger.error(`Failed to process ${fullPath}: ${error.message}`);
+                logger.error(
+                  `Failed to add script to ${fullPath}: ${error.message}`,
+                );
               }
             }
           }
         }
 
         const distPath = fileURLToPath(dir);
+
+        // First pass: Fix asset paths in HTML
         await processDirectory(distPath);
+
+        // Second pass: Add navigation script
+        await processDirectoryWithScript(distPath);
 
         logger.info("IPFS processing complete!");
       },
@@ -170,7 +202,7 @@ export default defineConfig({
     build: {
       rollupOptions: {
         output: {
-          assetFileNames: "_astro/[name].[hash][extname]",
+          assetFileNames: "[name].[hash][extname]",
         },
       },
     },
