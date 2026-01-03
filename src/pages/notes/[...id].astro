@@ -55,4 +55,78 @@ const { Content } = await render(entry);
       class="border-muted-text dark:border-dark-muted-text my-32 border-[0.5px] opacity-10 dark:opacity-15"
     />
   </div>
+
+  <style>
+    .prose :global(.mermaid) {
+      margin: 2rem 0;
+      overflow-x: auto;
+    }
+  </style>
+
+  <script>
+    async function renderMermaidDiagrams() {
+      const existingMermaidNodes = Array.from(
+        document.querySelectorAll<HTMLElement>(".mermaid"),
+      ).filter((node) => node.dataset.mermaidRendered !== "true");
+
+      const mermaidFences = new Set<HTMLElement>();
+
+      document
+        .querySelectorAll<HTMLElement>(
+          'pre[data-language="mermaid"], pre.language-mermaid',
+        )
+        .forEach((node) => mermaidFences.add(node));
+
+      document
+        .querySelectorAll<HTMLElement>("code.language-mermaid")
+        .forEach((node) => {
+          const pre = node.closest("pre");
+          if (pre) mermaidFences.add(pre);
+        });
+
+      const convertedNodes: HTMLElement[] = [];
+      for (const pre of mermaidFences) {
+        if (pre.dataset.mermaidConverted === "true") continue;
+
+        const source = pre.textContent ?? "";
+        if (!source.trim()) continue;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "mermaid";
+        wrapper.textContent = source;
+        pre.dataset.mermaidConverted = "true";
+        pre.replaceWith(wrapper);
+        convertedNodes.push(wrapper);
+      }
+
+      const nodesToRender: HTMLElement[] = [
+        ...existingMermaidNodes,
+        ...convertedNodes,
+      ].filter((node) => node.dataset.mermaidRendered !== "true");
+
+      if (nodesToRender.length === 0) return;
+
+      const { default: mermaid } = await import("mermaid");
+      const isDark = document.documentElement.classList.contains("dark");
+
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: isDark ? "dark" : "default",
+      });
+
+      await mermaid.run({ nodes: nodesToRender });
+      nodesToRender.forEach((node) => {
+        node.dataset.mermaidRendered = "true";
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", renderMermaidDiagrams);
+    } else {
+      renderMermaidDiagrams();
+    }
+
+    document.addEventListener("astro:page-load", renderMermaidDiagrams);
+  </script>
 </BaseLayout>

@@ -15,23 +15,23 @@ export const SITE: SiteConfiguration = {
 
 export const NAV_LINKS: NavigationLinks = {
   notes: {
-    path: "/notes",
+    path: "/notes/",
     label: "Notes",
   },
   projects: {
-    path: "/projects",
+    path: "/projects/",
     label: "Projects",
   },
   work: {
-    path: "/work",
+    path: "/work/",
     label: "Work",
   },
   hello: {
-    path: "/hello",
+    path: "/hello/",
     label: "Say hello",
   },
   sidequests: {
-    path: "/side-quests",
+    path: "/side-quests/",
     label: "Side quests",
   },
 };
