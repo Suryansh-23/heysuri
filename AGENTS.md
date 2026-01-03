@@ -61,6 +61,14 @@
 - Tailwind utility classes with shared `.prose` styles from `src/styles/typography.css`.
 - Theme toggling uses localStorage key `currentTheme`, defaulting to light.
 
+## Theming
+
+- Always update and verify **both** light and dark styles for any UI changes (including hover/active/disabled states).
+- Theme is controlled by `.dark`/`.light` on `document.documentElement` (see `src/components/ThemeToggle.astro`); use Tailwind `dark:` utilities when possible.
+- For component-scoped CSS, wrap dark selectors with `:global(.dark)` (e.g., `:global(.dark) .toast { ... }`) to avoid Astro scope leakage.
+- Prefer theme variables from `src/styles/global.css` and `src/styles/typography.css` (`--color-bg`, `--color-dark-bg`, `--color-muted-text`, `--color-dark-muted-text`, `--color-link`, `--color-dark-link`) over hard-coded colors.
+- Keep UI surfaces solid by default; only use transparency when it improves the design and remains readable in both themes.
+
 ## Gotchas
 
 - With `trailingSlash: "always"`, internal links should include a trailing `/` (including RSS item links) to avoid 404s.
