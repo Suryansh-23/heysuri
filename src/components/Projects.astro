@@ -13,7 +13,7 @@ const projects = await getCollection("projects");
     {
       projects.map((project) => (
         <div>
-          <ExternalLink href={project.data.href}>
+          <ExternalLink href={project.data.href} newTab>
             {project.data.title}
           </ExternalLink>
           <p class="prose m-0 text-sm opacity-90">{project.data.description}</p>

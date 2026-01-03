@@ -1,9 +1,11 @@
 ---
-const { href } = Astro.props;
+const { href, newTab = false } = Astro.props;
+const target = newTab ? "_blank" : undefined;
+const rel = newTab ? "noopener noreferrer" : undefined;
 ---
 
 <li class="flex items-center gap-1.5">
-  <a href={href} class="link">
+  <a href={href} class="link" target={target} rel={rel}>
     <slot />
   </a>
   <svg

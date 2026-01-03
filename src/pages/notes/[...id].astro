@@ -48,7 +48,7 @@ const { Content } = await render(entry);
     <hr
       class="border-muted-text dark:border-dark-muted-text my-12 border-[0.5px] opacity-10 dark:opacity-15"
     />
-    <div class="prose mx-auto">
+    <div class="note-content prose mx-auto">
       <Content />
     </div>
     <hr
@@ -64,6 +64,20 @@ const { Content } = await render(entry);
   </style>
 
   <script>
+    function updateNoteLinks() {
+      document
+        .querySelectorAll<HTMLAnchorElement>(".note-content a")
+        .forEach((anchor) => {
+          anchor.target = "_blank";
+          const relValues = new Set(
+            (anchor.getAttribute("rel") ?? "").split(" ").filter(Boolean),
+          );
+          relValues.add("noopener");
+          relValues.add("noreferrer");
+          anchor.setAttribute("rel", Array.from(relValues).join(" "));
+        });
+    }
+
     async function renderMermaidDiagrams() {
       const existingMermaidNodes = Array.from(
         document.querySelectorAll<HTMLElement>(".mermaid"),
@@ -121,12 +135,21 @@ const { Content } = await render(entry);
       });
     }
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", renderMermaidDiagrams);
-    } else {
-      renderMermaidDiagrams();
+    async function handleContentReady() {
+      updateNoteLinks();
+      await renderMermaidDiagrams();
     }
 
-    document.addEventListener("astro:page-load", renderMermaidDiagrams);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        void handleContentReady();
+      });
+    } else {
+      void handleContentReady();
+    }
+
+    document.addEventListener("astro:page-load", () => {
+      void handleContentReady();
+    });
   </script>
 </BaseLayout>
