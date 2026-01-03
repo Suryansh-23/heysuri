@@ -12,6 +12,8 @@ const year = new Date().getFullYear();
   <ThemeToggle />
   <div class="prose mt-2">
     <span class="block">© {year} {SITE.author}</span>
-    <span class="block text-sm opacity-80">Last updated <GitHash /></span>
+    <span class="text-muted-text dark:text-dark-muted-text block text-sm">
+      Last updated <GitHash />
+    </span>
   </div>
 </footer>

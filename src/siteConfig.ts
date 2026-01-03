@@ -45,12 +45,8 @@ export const SOCIAL_LINKS: SocialLinks = {
     label: "GitHub",
     href: "https://github.com/Suryansh-23",
   },
-  linkedin: {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/in/suryansh23/",
-  },
   twitter: {
-    label: "X",
+    label: "Twitter/X",
     href: "https://x.com/SuriPuri23",
   },
 };

@@ -67,7 +67,10 @@
 - Theme is controlled by `.dark`/`.light` on `document.documentElement` (see `src/components/ThemeToggle.astro`); use Tailwind `dark:` utilities when possible.
 - For component-scoped CSS, wrap dark selectors with `:global(.dark)` (e.g., `:global(.dark) .toast { ... }`) to avoid Astro scope leakage.
 - Prefer theme variables from `src/styles/global.css` and `src/styles/typography.css` (`--color-bg`, `--color-dark-bg`, `--color-muted-text`, `--color-dark-muted-text`, `--color-link`, `--color-dark-link`) over hard-coded colors.
-- Keep UI surfaces solid by default; only use transparency when it improves the design and remains readable in both themes.
+- Keep UI surfaces solid; avoid transparency except for essential motion/fade effects.
+- Site aesthetic is inkprint/minimal: avoid rounded corners, avoid translucent fills, and use solid borders with `--color-border`/`--color-dark-border`.
+- Typography uses `Newsreader` for body content and `IBM Plex Sans Condensed` for UI/labels; keep this pairing consistent.
+- Light/dark backgrounds use a subtle paper gradient (`--color-bg` → `--color-surface`, `--color-dark-bg` → `--color-dark-surface`) instead of flat fills.
 
 ## Gotchas
 

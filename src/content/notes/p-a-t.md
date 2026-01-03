@@ -293,7 +293,7 @@ PropAMMs feel like one of those “obviously useful, underrepresented” primiti
 
 If you want to dig deeper or build on this:
 
-- Repo: https://github.com/Suryansh-23/p.a.t
+- Github Repo: https://github.com/Suryansh-23/p.a.t
 - DeepWiki: https://deepwiki.com/Suryansh-23/p.a.t
 - ETHGlobal: https://ethglobal.com/showcase/p-a-t-s0c42
-- Post: https://x.com/SuriPuri23/status/2004931248566010145?s=20
+- Twitter/X Post: https://x.com/SuriPuri23/status/2004931248566010145?s=20

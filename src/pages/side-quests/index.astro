@@ -41,7 +41,9 @@ const letterboxdRss = `https://letterboxd.com/${letterboxdUser}/rss/`;
         productions, with detours into jazz, rock & film scores.
       </p>
     </div>
-    <div class="border-muted-text/10 mt-3 overflow-hidden rounded-md">
+    <div
+      class="border-border dark:border-dark-border mt-3 overflow-hidden border"
+    >
       <iframe
         style="display:block;border:0;width:100%;height:352px;border-radius:0"
         src={spotifyEmbedUrl}
@@ -55,9 +57,7 @@ const letterboxdRss = `https://letterboxd.com/${letterboxdUser}/rss/`;
     </p>
   </section>
 
-  <hr
-    class="border-muted-text dark:border-dark-muted-text my-12 border-[0.5px] opacity-10 dark:opacity-15"
-  />
+  <hr class="border-border dark:border-dark-border my-12 border-[0.5px]" />
 
   <section class="py-3">
     <h2
@@ -72,7 +72,7 @@ const letterboxdRss = `https://letterboxd.com/${letterboxdUser}/rss/`;
       </p>
     </div>
 
-    <div class="border-muted-text/10 mt-3 rounded-md border p-4">
+    <div class="border-border dark:border-dark-border mt-3 border p-4">
       <p class="prose m-0">
         Film diary lives on <a
           href={letterboxdUrl}

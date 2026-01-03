@@ -38,28 +38,162 @@ const { Content } = await render(entry);
       )
     }
     <h1
-      class="text-[36px] leading-snug font-bold text-balance text-black dark:text-white"
+      class="text-ink dark:text-dark-ink text-[36px] leading-snug font-bold text-balance"
     >
       {entry.data.title}
     </h1>
     <p class="text-muted-text dark:text-dark-muted-text mt-3">
       {formatDate(entry.data.publicationDate)}
     </p>
-    <hr
-      class="border-muted-text dark:border-dark-muted-text my-12 border-[0.5px] opacity-10 dark:opacity-15"
-    />
+    <hr class="border-border dark:border-dark-border my-12 border-[0.5px]" />
     <div class="note-content prose mx-auto">
       <Content />
     </div>
-    <hr
-      class="border-muted-text dark:border-dark-muted-text my-32 border-[0.5px] opacity-10 dark:opacity-15"
-    />
+    <hr class="border-border dark:border-dark-border my-32 border-[0.5px]" />
   </div>
 
   <style>
-    .prose :global(.mermaid) {
+    .note-content :global(.mermaid) {
       margin: 2rem 0;
       overflow-x: auto;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: clamp(0.75rem, 1.6vw, 1rem);
+      cursor: zoom-in;
+    }
+
+    :global(.dark) .note-content :global(.mermaid) {
+      background: var(--color-dark-surface);
+      border-color: var(--color-dark-border);
+    }
+
+    .note-content :global(img),
+    .note-content :global(picture img) {
+      cursor: zoom-in;
+    }
+
+    :global(.media-viewer) {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 2rem);
+      background: var(--color-bg);
+      color: var(--color-ink);
+      z-index: 60;
+      cursor: zoom-out;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 0.2s ease,
+        visibility 0s linear 0.2s;
+    }
+
+    :global(.dark .media-viewer) {
+      background: var(--color-dark-bg);
+      color: var(--color-dark-ink);
+    }
+
+    :global(.media-viewer.is-open) {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.2s ease;
+    }
+
+    :global(.media-viewer__dialog) {
+      width: min(1100px, 92vw);
+      max-height: 90vh;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 0.75rem;
+      padding: clamp(0.75rem, 2vw, 1rem);
+      cursor: default;
+      transform: translateY(6px);
+      opacity: 0;
+      transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    :global(.media-viewer.is-open .media-viewer__dialog) {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    :global(.dark .media-viewer__dialog) {
+      background: var(--color-dark-surface);
+      border-color: var(--color-dark-border);
+    }
+
+    :global(.media-viewer__header) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-sans);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 0.65rem;
+      color: var(--color-muted-text);
+    }
+
+    :global(.dark .media-viewer__header) {
+      color: var(--color-dark-muted-text);
+    }
+
+    :global(.media-viewer__body) {
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    :global(.media-viewer__body img) {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    :global(.media-viewer__body .mermaid) {
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: inherit;
+      cursor: default;
+      width: 100%;
+    }
+
+    :global(.media-viewer__close) {
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-muted-text);
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.65rem;
+      cursor: pointer;
+    }
+
+    :global(.dark .media-viewer__close) {
+      border-color: var(--color-dark-border);
+      background: var(--color-dark-bg);
+      color: var(--color-dark-muted-text);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      :global(.media-viewer) {
+        transition: none;
+      }
+
+      :global(.media-viewer__dialog) {
+        transition: none;
+      }
     }
   </style>
 
@@ -135,9 +269,115 @@ const { Content } = await render(entry);
       });
     }
 
+    function initMediaViewer() {
+      const content = document.querySelector<HTMLElement>(".note-content");
+      if (!content || content.dataset.mediaPreviewInitialized === "true") {
+        return;
+      }
+      content.dataset.mediaPreviewInitialized = "true";
+
+      let viewer = document.querySelector<HTMLElement>("[data-media-viewer]");
+      if (!viewer) {
+        viewer = document.createElement("div");
+        viewer.className = "media-viewer";
+        viewer.dataset.mediaViewer = "true";
+        viewer.setAttribute("aria-hidden", "true");
+        viewer.setAttribute("role", "dialog");
+        viewer.setAttribute("aria-modal", "true");
+        viewer.innerHTML = `
+          <div class="media-viewer__dialog" role="document">
+            <div class="media-viewer__header">
+              <span>Preview</span>
+              <button class="media-viewer__close" type="button" data-media-close>
+                Close
+              </button>
+            </div>
+            <div class="media-viewer__body" data-media-body></div>
+          </div>
+        `;
+        document.body.appendChild(viewer);
+      }
+
+      const body = viewer.querySelector<HTMLElement>("[data-media-body]");
+
+      const VIEWER_FADE_MS = 200;
+      let closeTimeout: number | undefined;
+
+      const closeViewer = () => {
+        if (!viewer || !body) return;
+        if (!viewer.classList.contains("is-open")) return;
+        viewer.classList.remove("is-open");
+        window.clearTimeout(closeTimeout);
+        closeTimeout = window.setTimeout(() => {
+          viewer.setAttribute("aria-hidden", "true");
+          body.innerHTML = "";
+          document.documentElement.style.overflow = "";
+        }, VIEWER_FADE_MS);
+      };
+
+      const openViewer = (node: HTMLElement) => {
+        if (!viewer || !body) return;
+        body.innerHTML = "";
+
+        if (node instanceof HTMLImageElement) {
+          const previewImage = new Image();
+          previewImage.src = node.currentSrc || node.src;
+          previewImage.alt = node.alt || "";
+          body.appendChild(previewImage);
+        } else {
+          const clone = node.cloneNode(true) as HTMLElement;
+          body.appendChild(clone);
+        }
+
+        viewer.classList.add("is-open");
+        viewer.setAttribute("aria-hidden", "false");
+        window.clearTimeout(closeTimeout);
+        document.documentElement.style.overflow = "hidden";
+      };
+
+      if (viewer.dataset.mediaListenersAttached !== "true") {
+        viewer.dataset.mediaListenersAttached = "true";
+
+        viewer.addEventListener("click", (event) => {
+          const target = event.target as HTMLElement | null;
+          if (!target) return;
+          if (target.closest("[data-media-close]") || target === viewer) {
+            closeViewer();
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && viewer?.classList.contains("is-open")) {
+            closeViewer();
+          }
+        });
+      }
+
+      content.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+
+        const mermaidNode = target.closest<HTMLElement>(".mermaid");
+        if (mermaidNode && content.contains(mermaidNode)) {
+          event.preventDefault();
+          event.stopPropagation();
+          openViewer(mermaidNode);
+          return;
+        }
+
+        const imageNode = target.closest<HTMLImageElement>("img");
+        if (imageNode && content.contains(imageNode)) {
+          event.preventDefault();
+          event.stopPropagation();
+          openViewer(imageNode);
+        }
+      });
+    }
+
     async function handleContentReady() {
       updateNoteLinks();
       await renderMermaidDiagrams();
+      initMediaViewer();
     }
 
     if (document.readyState === "loading") {

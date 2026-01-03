@@ -99,10 +99,7 @@ const hasToasts = toastItems.length > 0;
       aria-label="Latest updates"
     >
       <div class="recent-toast-header text-muted-text dark:text-dark-muted-text flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase">
-        <span class="relative flex size-1.5">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/70" />
-          <span class="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
-        </span>
+        <span class="recent-toast-indicator" aria-hidden="true" />
         Latest
       </div>
       <div
@@ -121,13 +118,18 @@ const hasToasts = toastItems.length > 0;
             style={`--toast-delay:${index * 0.12}s`}
             data-toast
           >
-            <a href={item.href} class="recent-toast-link">
+            <a
+              href={item.href}
+              class="recent-toast-link"
+              target={item.kind === "Project" ? "_blank" : undefined}
+              rel={item.kind === "Project" ? "noopener noreferrer" : undefined}
+            >
               <span class="toast-dot" aria-hidden="true" />
               <div class="min-w-0">
                 <p class="text-muted-text dark:text-dark-muted-text text-[10px] font-semibold tracking-[0.18em] uppercase">
                   {item.kind}
                 </p>
-                <p class="truncate text-sm font-medium text-black dark:text-white">
+                <p class="text-ink dark:text-dark-ink truncate text-sm font-medium">
                   {item.title}
                 </p>
               </div>
@@ -171,11 +173,9 @@ const hasToasts = toastItems.length > 0;
     transform: translateY(6px);
     animation: toast-in 0.35s ease forwards;
     animation-delay: var(--toast-delay);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: 0.9rem;
+    border: 1px solid var(--color-border);
     padding: 0.55rem 2.4rem 0.55rem 0.85rem;
-    background: var(--color-bg);
-    box-shadow: 0 14px 30px -24px rgba(15, 23, 42, 0.45);
+    background: var(--color-surface);
     transition:
       opacity 0.35s ease,
       transform 0.35s ease,
@@ -188,18 +188,16 @@ const hasToasts = toastItems.length > 0;
   }
 
   :global(.dark) .recent-toast {
-    border-color: var(--color-neutral-800);
-    background: var(--color-dark-bg);
-    box-shadow: 0 16px 32px -24px rgba(0, 0, 0, 0.5);
+    border-color: var(--color-dark-border);
+    background: var(--color-dark-surface);
   }
 
   .recent-toast:hover {
-    transform: translateY(-1px);
-    border-color: var(--color-neutral-300);
+    border-color: var(--color-muted-text);
   }
 
   :global(.dark) .recent-toast:hover {
-    border-color: var(--color-neutral-600);
+    border-color: var(--color-dark-muted-text);
   }
 
   .recent-toast-link {
@@ -218,40 +216,63 @@ const hasToasts = toastItems.length > 0;
     margin: 0;
     padding: 0;
     pointer-events: none;
-    border-color: transparent;
+    border-color: var(--color-bg);
+  }
+
+  :global(.dark) .recent-toast.is-dismissing {
+    border-color: var(--color-dark-bg);
+  }
+
+  .recent-toast-indicator {
+    width: 0.4rem;
+    height: 0.4rem;
+    background: var(--color-accent);
+    display: inline-flex;
+  }
+
+  :global(.dark) .recent-toast-indicator {
+    background: var(--color-dark-accent);
   }
 
   .toast-dot {
     width: 0.5rem;
     height: 0.5rem;
-    border-radius: 9999px;
     flex: none;
   }
 
   .recent-toast--note .toast-dot {
-    background: #10b981;
+    background: var(--color-accent);
   }
 
   .recent-toast--project .toast-dot {
-    background: #38bdf8;
+    background: var(--color-accent-muted);
+  }
+
+  :global(.dark) .recent-toast--note .toast-dot {
+    background: var(--color-dark-accent);
+  }
+
+  :global(.dark) .recent-toast--project .toast-dot {
+    background: var(--color-dark-accent-muted);
   }
 
   .toast-pill {
     margin-left: auto;
     padding: 0.15rem 0.5rem;
-    border-radius: 9999px;
+    border: 1px solid var(--color-border);
     font-size: 0.55rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     font-weight: 600;
-    background: #d1fae5;
-    color: #0f766e;
+    background: var(--color-bg);
+    color: var(--color-ink);
     flex: none;
   }
 
   :global(.dark) .toast-pill {
-    background: #064e3b;
-    color: #5eead4;
+    background: var(--color-dark-bg);
+    border-color: var(--color-dark-border);
+    color: var(--color-dark-ink);
   }
 
   .toast-close {
@@ -260,12 +281,11 @@ const hasToasts = toastItems.length > 0;
     right: 0.6rem;
     transform: translateY(-50%) scale(0.9);
     opacity: 0;
-    border: 1px solid var(--color-neutral-300);
+    border: 1px solid var(--color-border);
     background: var(--color-bg);
-    color: var(--color-neutral-700);
+    color: var(--color-muted-text);
     width: 1.6rem;
     height: 1.6rem;
-    border-radius: 9999px;
     display: grid;
     place-items: center;
     font-size: 1rem;
@@ -279,8 +299,8 @@ const hasToasts = toastItems.length > 0;
   }
 
   :global(.dark) .toast-close {
-    color: var(--color-neutral-300);
-    border-color: var(--color-neutral-700);
+    color: var(--color-dark-muted-text);
+    border-color: var(--color-dark-border);
     background: var(--color-dark-bg);
   }
 
@@ -291,13 +311,13 @@ const hasToasts = toastItems.length > 0;
   }
 
   .toast-close:hover {
-    background: var(--color-neutral-100);
-    border-color: var(--color-neutral-400);
+    background: var(--color-surface);
+    border-color: var(--color-muted-text);
   }
 
   :global(.dark) .toast-close:hover {
-    background: var(--color-neutral-800);
-    border-color: var(--color-neutral-600);
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-muted-text);
   }
 
   @keyframes toast-in {

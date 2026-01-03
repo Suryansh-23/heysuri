@@ -16,7 +16,9 @@ const projects = await getCollection("projects");
           <ExternalLink href={project.data.href} newTab>
             {project.data.title}
           </ExternalLink>
-          <p class="prose m-0 text-sm opacity-90">{project.data.description}</p>
+          <p class="prose text-muted-text dark:text-dark-muted-text m-0 text-sm">
+            {project.data.description}
+          </p>
         </div>
       ))
     }
@@ -30,19 +32,27 @@ const projects = await getCollection("projects");
   <div class="grid gap-4 sm:grid-cols-2">
     <div class="prose">
       <h3 class="m-0 text-base">Languages</h3>
-      <p class="m-0 text-sm opacity-90">JS/TS, Solidity, Go, Rust, Python</p>
+      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+        JS/TS, Solidity, Go, Rust, Python
+      </p>
     </div>
     <div class="prose">
       <h3 class="m-0 text-base">Frontend</h3>
-      <p class="m-0 text-sm opacity-90">React, Next.js, Tailwind CSS</p>
+      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+        React, Next.js, Tailwind CSS
+      </p>
     </div>
     <div class="prose">
       <h3 class="m-0 text-base">Smart contracts & Web3</h3>
-      <p class="m-0 text-sm opacity-90">Viem, Ethers, Chainlink, EigenLayer</p>
+      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+        Viem, Ethers, Chainlink, EigenLayer
+      </p>
     </div>
     <div class="prose">
       <h3 class="m-0 text-base">Data & infra</h3>
-      <p class="m-0 text-sm opacity-90">TheGraph/Substreams, RabbitMQ</p>
+      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+        TheGraph/Substreams, RabbitMQ
+      </p>
     </div>
   </div>
 </section>

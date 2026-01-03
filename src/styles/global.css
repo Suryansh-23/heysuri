@@ -24,13 +24,94 @@
 }
 
 @theme {
-  --color-bg: var(--color-neutral-50);
-  --color-link: oklch(46.97% 0.2734 267.56);
-  --color-muted-text: var(--color-neutral-700);
+  --font-sans: "IBM Plex Sans Condensed", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Newsreader", "Iowan Old Style", "Times New Roman", serif;
 
-  --color-dark-bg: var(--color-neutral-950);
-  --color-dark-link: oklch(73.9% 0.1387 282.47);
-  --color-dark-muted-text: var(--color-neutral-300);
+  --color-bg: #f6f1e7;
+  --color-surface: #f1ebdf;
+  --color-border: #d7d0c4;
+  --color-ink: #1b1a17;
+  --color-link: #1f3a5f;
+  --color-accent: #2a4a78;
+  --color-accent-muted: #6b7a93;
+  --color-muted-text: #5c544a;
+
+  --color-dark-bg: #11100e;
+  --color-dark-surface: #1a1815;
+  --color-dark-border: #2c2822;
+  --color-dark-ink: #e6dfd2;
+  --color-dark-link: #d6c48f;
+  --color-dark-accent: #e0d4a6;
+  --color-dark-accent-muted: #8c8476;
+  --color-dark-muted-text: #b7afa2;
+}
+
+body {
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  background-color: var(--color-bg);
+  background-image: linear-gradient(
+    180deg,
+    var(--color-bg) 0%,
+    var(--color-surface) 100%
+  );
+}
+
+.dark body {
+  color: var(--color-dark-ink);
+  background-color: var(--color-dark-bg);
+  background-image: linear-gradient(
+    180deg,
+    var(--color-dark-bg) 0%,
+    var(--color-dark-surface) 100%
+  );
+}
+
+button,
+input,
+textarea,
+select {
+  border-radius: 0;
+}
+
+:root {
+  --theme-transition-duration: 180ms;
+  --theme-transition-ease: ease;
+}
+
+body,
+body a,
+body button,
+body input,
+body textarea,
+body select,
+body hr,
+body .prose,
+body .link,
+body .link-mention,
+body .link-mention__icon,
+body .link-mention__title {
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: var(--theme-transition-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  body a,
+  body button,
+  body input,
+  body textarea,
+  body select,
+  body hr,
+  body .prose,
+  body .link,
+  body .link-mention,
+  body .link-mention__icon,
+  body .link-mention__title {
+    transition-duration: 0ms;
+  }
 }
 
 /* ensure .link and typography.css are consistent */

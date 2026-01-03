@@ -1,6 +1,6 @@
 <div
   id="theme-toggle"
-  class="relative z-0 inline-grid grid-cols-3 gap-0.5 bg-neutral-950/5 p-0.75 text-neutral-950 dark:bg-white/10 dark:text-white"
+  class="border-border bg-surface text-ink dark:border-dark-border dark:bg-dark-surface dark:text-dark-ink relative z-0 inline-grid grid-cols-3 gap-0.5 border p-0.75"
 >
   <button
     aria-label="System theme"
@@ -70,13 +70,13 @@
 
 <style>
   .theme-button.active {
-    background-color: white;
-    outline: 1px solid;
+    background-color: var(--color-bg);
+    outline: 1px solid var(--color-border);
   }
 
   :global(.dark) .theme-button.active {
-    background-color: var(--active-bg-dark, black);
-    outline: 1px solid;
+    background-color: var(--color-dark-bg);
+    outline: 1px solid var(--color-dark-border);
   }
 </style>
 

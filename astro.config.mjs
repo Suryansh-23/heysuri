@@ -3,6 +3,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
+import rehypeLinkMentions from "./src/lib/rehypeLinkMentions.mjs";
 
 // IPFS Integration - Handles IPFS asset path resolution during build time
 function ipfsIntegration() {
@@ -191,6 +192,7 @@ export default defineConfig({
     shikiConfig: {
       theme: "dark-plus",
     },
+    rehypePlugins: [rehypeLinkMentions],
   },
   site: "https://ipfs.io/ipns/k51qzi5uqu5dlq5t1j65qpm1wxojwdvrqxgk1jm3b230wvwd2ad6y6mankn20s/",
   trailingSlash: "always",

@@ -1,72 +1,64 @@
 .prose {
-  --prose-color: var(--color-neutral-700);
-  --prose-heading-color: var(--color-neutral-950);
-  --prose-strong-color: var(--color-neutral-950);
+  --prose-color: var(--color-ink);
+  --prose-heading-color: var(--color-ink);
+  --prose-strong-color: var(--color-ink);
   --prose-link-color: var(--color-link);
-  --prose-code-color: var(--color-neutral-950);
-  --prose-marker-color: color-mix(
-    in oklab,
-    var(--color-neutral-700) 25%,
-    transparent
-  );
+  --prose-code-color: var(--color-ink);
+  --prose-marker-color: var(--color-muted-text);
   --prose-link-underline-color: var(--color-link);
-  --prose-th-borders: var(--color-neutral-300);
-  --prose-td-borders: var(--color-neutral-200);
-  --prose-hr-color: color-mix(
-    in oklab,
-    var(--color-neutral-950) 5%,
-    transparent
-  );
-  --prose-blockquote-border-color: var(--color-neutral-300);
+  --prose-th-borders: var(--color-border);
+  --prose-td-borders: var(--color-border);
+  --prose-hr-color: var(--color-border);
+  --prose-blockquote-border-color: var(--color-border);
+  --prose-pre-bg: var(--color-surface);
+  --prose-pre-border: var(--color-border);
+  --prose-kbd-bg: var(--color-surface);
+  --prose-kbd-border: var(--color-border);
 
   /* Dark mode colors from the first file */
   &:where(.dark, .dark *) {
-    --prose-color: var(--color-neutral-300);
-    --prose-heading-color: var(--color-white);
-    --prose-strong-color: var(--color-white);
+    --prose-color: var(--color-dark-ink);
+    --prose-heading-color: var(--color-dark-ink);
+    --prose-strong-color: var(--color-dark-ink);
     --prose-link-color: var(--color-dark-link);
-    --prose-code-color: var(--color-white);
-    --prose-marker-color: color-mix(
-      in oklab,
-      var(--color-neutral-300) 35%,
-      transparent
-    );
+    --prose-code-color: var(--color-dark-ink);
+    --prose-marker-color: var(--color-dark-muted-text);
     --prose-link-underline-color: var(--color-dark-link);
-    --prose-th-borders: var(--color-neutral-600);
-    --prose-td-borders: var(--color-neutral-700);
-    --prose-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
-    --prose-blockquote-border-color: var(--color-neutral-600);
+    --prose-th-borders: var(--color-dark-border);
+    --prose-td-borders: var(--color-dark-border);
+    --prose-hr-color: var(--color-dark-border);
+    --prose-blockquote-border-color: var(--color-dark-border);
+    --prose-pre-bg: var(--color-dark-surface);
+    --prose-pre-border: var(--color-dark-border);
+    --prose-kbd-bg: var(--color-dark-surface);
+    --prose-kbd-border: var(--color-dark-border);
   }
 
   /* System dark mode colors from the first file */
   @media (prefers-color-scheme: dark) {
     &:where(.system, .system *) {
-      --prose-color: var(--color-neutral-300);
-      --prose-heading-color: var(--color-white);
-      --prose-strong-color: var(--color-white);
-      --prose-link-color: var(--color-white);
-      --prose-code-color: var(--color-white);
-      --prose-marker-color: color-mix(
-        in oklab,
-        var(--color-neutral-300) 35%,
-        transparent
-      );
-      --prose-link-underline-color: var(--color-blue-400);
-      --prose-th-borders: var(--color-neutral-600);
-      --prose-td-borders: var(--color-neutral-700);
-      --prose-hr-color: color-mix(
-        in oklab,
-        var(--color-white) 10%,
-        transparent
-      );
-      --prose-blockquote-border-color: var(--color-neutral-600);
+      --prose-color: var(--color-dark-ink);
+      --prose-heading-color: var(--color-dark-ink);
+      --prose-strong-color: var(--color-dark-ink);
+      --prose-link-color: var(--color-dark-link);
+      --prose-code-color: var(--color-dark-ink);
+      --prose-marker-color: var(--color-dark-muted-text);
+      --prose-link-underline-color: var(--color-dark-link);
+      --prose-th-borders: var(--color-dark-border);
+      --prose-td-borders: var(--color-dark-border);
+      --prose-hr-color: var(--color-dark-border);
+      --prose-blockquote-border-color: var(--color-dark-border);
+      --prose-pre-bg: var(--color-dark-surface);
+      --prose-pre-border: var(--color-dark-border);
+      --prose-kbd-bg: var(--color-dark-surface);
+      --prose-kbd-border: var(--color-dark-border);
     }
   }
 
   color: var(--prose-color);
   max-width: 65ch;
   font-size: 1rem;
-  line-height: 2;
+  line-height: 1.9;
 
   :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     margin-top: 1.25em;
@@ -74,8 +66,8 @@
   }
 
   :where([class~="lead"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     color: var(--tw-prose-lead);
     font-size: 1.25em;
     line-height: 1.6;
@@ -99,14 +91,14 @@
   }
 
   :where(blockquote strong):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     color: inherit;
   }
 
   :where(thead th strong):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     color: inherit;
   }
 
@@ -118,56 +110,56 @@
   }
 
   :where(ol[type="A"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: upper-alpha;
   }
 
   :where(ol[type="a"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: lower-alpha;
   }
 
   :where(ol[type="A" s]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: upper-alpha;
   }
 
   :where(ol[type="a" s]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: lower-alpha;
   }
 
   :where(ol[type="I"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: upper-roman;
   }
 
   :where(ol[type="i"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: lower-roman;
   }
 
   :where(ol[type="I" s]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: upper-roman;
   }
 
   :where(ol[type="i" s]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: lower-roman;
   }
 
   :where(ol[type="1"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     list-style-type: decimal;
   }
 
@@ -303,11 +295,11 @@
     font-weight: 500;
     font-family: inherit;
     color: var(--tw-prose-kbd);
-    box-shadow:
-      0 0 0 1px rgb(var(--tw-prose-kbd-shadows) / 10%),
-      0 3px 0 rgb(var(--tw-prose-kbd-shadows) / 10%);
+    border: 1px solid var(--prose-kbd-border);
+    background-color: var(--prose-kbd-bg);
+    box-shadow: none;
     font-size: 0.875em;
-    border-radius: 0.3125rem;
+    border-radius: 0;
     padding-top: 0.1875em;
     padding-inline-end: 0.375em;
     padding-bottom: 0.1875em;
@@ -355,27 +347,28 @@
   }
 
   :where(blockquote code):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     color: inherit;
   }
 
   :where(thead th code):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     color: inherit;
   }
 
   :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     color: var(--tw-prose-pre-code);
-    background-color: var(--tw-prose-pre-bg);
+    background-color: var(--prose-pre-bg);
+    border: 1px solid var(--prose-pre-border);
     overflow-x: auto;
     font-weight: 400;
     font-size: 0.875em;
     line-height: 1.7142857;
     margin-top: 1.7142857em;
     margin-bottom: 1.7142857em;
-    border-radius: 0.375rem;
+    border-radius: 0;
     padding-top: 0.8571429em;
     padding-inline-end: 1.1428571em;
     padding-bottom: 0.8571429em;
@@ -383,7 +376,7 @@
   }
 
   :where(pre code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    background-color: transparent;
+    background-color: inherit;
     border-width: 0;
     border-radius: 0;
     padding: 0;
@@ -435,8 +428,8 @@
   }
 
   :where(tbody tr:last-child):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     border-bottom-width: 0;
   }
 
@@ -488,8 +481,8 @@
   }
 
   :where([class~="lead"]):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     font-size: 1.2222222em;
     line-height: 1.4545455;
     margin-top: 1.0909091em;
@@ -540,8 +533,8 @@
   }
 
   :where(picture > img):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     margin-top: 0;
     margin-bottom: 0;
   }
@@ -553,7 +546,7 @@
 
   :where(kbd):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     font-size: 0.8888889em;
-    border-radius: 0.3125rem;
+    border-radius: 0;
     padding-top: 0.2222222em;
     padding-inline-end: 0.4444444em;
     padding-bottom: 0.2222222em;
@@ -577,7 +570,7 @@
     line-height: 1.75;
     margin-top: 2em;
     margin-bottom: 2em;
-    border-radius: 0.375rem;
+    border-radius: 0;
     padding-top: 1em;
     padding-inline-end: 1.5em;
     padding-bottom: 1em;
@@ -610,21 +603,86 @@
   }
 
   :where(.prose-lg > ul > li p):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     margin-top: 0.8888889em;
     margin-bottom: 0.8888889em;
   }
 
   :where(.prose-lg > ul > li > p:first-child):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     margin-top: 1.3333333em;
   }
 
   :where(.prose-lg > ul > li > p:last-child):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    ) {
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
     margin-bottom: 1.333333;
   }
+}
+
+.prose a.link-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.08rem 0.45rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: 0.95em;
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+.prose a.link-mention:hover {
+  border-color: var(--color-muted-text);
+}
+
+.dark .prose a.link-mention {
+  border-color: var(--color-dark-border);
+  background: var(--color-dark-surface);
+  color: var(--color-dark-ink);
+}
+
+.dark .prose a.link-mention:hover {
+  border-color: var(--color-dark-muted-text);
+}
+
+.prose .link-mention__icon {
+  width: 1rem;
+  height: 1rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-muted-text);
+  font-size: 0.55rem;
+  line-height: 1;
+}
+
+.dark .prose .link-mention__icon {
+  border-color: var(--color-dark-border);
+  background: var(--color-dark-bg);
+  color: var(--color-dark-muted-text);
+}
+
+.prose .link-mention__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.prose .link-mention__icon[data-has-icon="false"]::after {
+  content: attr(data-host);
+}
+
+.prose .link-mention__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
