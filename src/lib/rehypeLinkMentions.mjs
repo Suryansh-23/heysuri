@@ -28,7 +28,7 @@ const normalizeText = (value = "") =>
 const truncateText = (value = "", max = 140) => {
   if (!value) return value;
   if (value.length <= max) return value;
-  return `${value.slice(0, max - 1).trimEnd()}…`;
+  return `${value.slice(0, max - 3).trimEnd()}...`;
 };
 
 const parseAttributes = (tag) => {
@@ -338,12 +338,10 @@ export default function rehypeLinkMentions() {
         isTwitterLink && cleanedMetaTitle && isGenericTwitterTitle(metaTitle)
           ? null
           : cleanedMetaTitle;
+      const twitterTitle =
+        oEmbedTitle || derivedTitle || usableMetaTitle || "X post";
       const title = isTwitterLink
-        ? oEmbedTitle ||
-          derivedTitle ||
-          usableMetaTitle ||
-          fallbackText ||
-          href.replace(/^https?:\/\//i, "")
+        ? twitterTitle
         : usableMetaTitle ||
           oEmbedTitle ||
           derivedTitle ||
