@@ -1,6 +1,6 @@
 ---
 import { type CollectionEntry } from "astro:content";
-import { SITE } from "@/siteConfig";
+import { SITE, SOCIAL_LINKS } from "@/siteConfig";
 
 const { entry } = Astro.props;
 const post = entry as CollectionEntry<"notes">;
@@ -9,6 +9,20 @@ const postTitle = post.data.title || SITE.title;
 const postDescription = post.data.description || SITE.description;
 const canonicalUrl = Astro.url;
 const ogImage = new URL(`og/notes/${post.id}.png`, Astro.site);
+const ogWidth = 1200;
+const ogHeight = 630;
+const twitterHandle = (() => {
+  const twitterUrl = SOCIAL_LINKS.twitter?.href;
+  if (!twitterUrl) return null;
+  try {
+    const url = new URL(twitterUrl);
+    const handle = url.pathname.split("/").filter(Boolean)[0];
+    return handle ? `@${handle}` : null;
+  } catch {
+    return null;
+  }
+})();
+const publishedTime = post.data.publicationDate.toISOString();
 ---
 
 <title>{`${postTitle} | ${SITE.title}`}</title>
@@ -19,16 +33,25 @@ const ogImage = new URL(`og/notes/${post.id}.png`, Astro.site);
 <meta property="og:title" content={postTitle} />
 <meta property="og:description" content={postDescription} />
 <meta property="og:url" content={canonicalUrl} />
+<meta property="og:site_name" content={SITE.title} />
 <meta property="og:image" content={ogImage} />
+<meta property="og:image:secure_url" content={ogImage} />
 <meta property="og:image:alt" content={postTitle} />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content={`${ogWidth}`} />
+<meta property="og:image:height" content={`${ogHeight}`} />
 <meta property="og:type" content="article" />
 <meta property="og:locale" content={SITE.locale} />
+<meta property="article:published_time" content={publishedTime} />
+<meta property="article:author" content={SITE.author} />
 
 <meta name="twitter:title" content={postTitle} />
 <meta name="twitter:description" content={postDescription} />
-<meta property="twitter:image" content={ogImage} />
+<meta name="twitter:image" content={ogImage} />
 <meta name="twitter:image:alt" content={postTitle} />
 <meta name="twitter:card" content="summary_large_image" />
+{twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
+{twitterHandle && <meta name="twitter:creator" content={twitterHandle} />}
 
 {
   post?.data.tags &&

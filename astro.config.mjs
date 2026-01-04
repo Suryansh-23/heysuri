@@ -4,6 +4,12 @@ import tailwindcss from "@tailwindcss/vite";
 import rehypeLinkMentions from "./src/lib/rehypeLinkMentions.mjs";
 
 // https://astro.build/config
+const siteUrl = process.env.SITE_URL
+  ? process.env.SITE_URL
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:4321";
+
 export default defineConfig({
   integrations: [sitemap()],
   markdown: {
@@ -12,20 +18,13 @@ export default defineConfig({
     },
     rehypePlugins: [rehypeLinkMentions],
   },
-  site: process.env.SITE_URL ?? "https://example.com",
+  site: siteUrl,
   trailingSlash: "always",
   build: {
     format: "directory",
   },
   vite: {
     plugins: [tailwindcss()],
-    build: {
-      rollupOptions: {
-        output: {
-          assetFileNames: "[name].[hash][extname]",
-        },
-      },
-    },
     define: {
       "import.meta.env.BUILT_AT": JSON.stringify(new Date().toISOString()),
     },

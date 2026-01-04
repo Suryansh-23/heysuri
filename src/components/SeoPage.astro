@@ -1,5 +1,5 @@
 ---
-import { SITE } from "@/siteConfig.ts";
+import { SITE, SOCIAL_LINKS } from "@/siteConfig.ts";
 
 interface Props {
   title?: string;
@@ -15,6 +15,19 @@ const pathName =
     : canonicalUrl.pathname.replace(/^\/|\/$/g, "");
 const ogImage = new URL(`og/${pathName}.png`, Astro.site);
 const ogImageAlt = title;
+const ogWidth = 1200;
+const ogHeight = 630;
+const twitterHandle = (() => {
+  const twitterUrl = SOCIAL_LINKS.twitter?.href;
+  if (!twitterUrl) return null;
+  try {
+    const url = new URL(twitterUrl);
+    const handle = url.pathname.split("/").filter(Boolean)[0];
+    return handle ? `@${handle}` : null;
+  } catch {
+    return null;
+  }
+})();
 ---
 
 <title>{title}</title>
@@ -24,8 +37,13 @@ const ogImageAlt = title;
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonicalUrl} />
+<meta property="og:site_name" content={SITE.title} />
 <meta property="og:image" content={ogImage} />
+<meta property="og:image:secure_url" content={ogImage} />
 <meta property="og:image:alt" content={ogImageAlt} />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content={`${ogWidth}`} />
+<meta property="og:image:height" content={`${ogHeight}`} />
 <meta property="og:type" content="website" />
 <meta property="og:locale" content={SITE.locale} />
 
@@ -34,3 +52,5 @@ const ogImageAlt = title;
 <meta name="twitter:image" content={ogImage} />
 <meta name="twitter:image:alt" content={ogImageAlt} />
 <meta name="twitter:card" content="summary_large_image" />
+{twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
+{twitterHandle && <meta name="twitter:creator" content={twitterHandle} />}
