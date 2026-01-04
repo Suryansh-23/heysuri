@@ -58,6 +58,7 @@
 
 - Tailwind utility classes with shared `.prose` styles from `src/styles/typography.css`.
 - Theme toggling uses localStorage key `currentTheme`, defaulting to light.
+- Authoring notation lives in `BLOG_NOTATION.md`; keep it up to date when new content features land.
 
 ## Theming
 
@@ -69,6 +70,31 @@
 - Site aesthetic is inkprint/minimal: avoid rounded corners, avoid translucent fills, and use solid borders with `--color-border`/`--color-dark-border`.
 - Typography uses `Newsreader` for body content and `IBM Plex Sans Condensed` for UI/labels; keep this pairing consistent.
 - Light/dark backgrounds use a subtle paper gradient (`--color-bg` → `--color-surface`, `--color-dark-bg` → `--color-dark-surface`) instead of flat fills.
+
+## Content authoring & notation
+
+- See `BLOG_NOTATION.md` for the full writing syntax: frontmatter, inline code, math, tables, embeds, images, Mermaid diagrams, and MDX components.
+- Pseudocode blocks use ` ```pseudocode ` or ` ```algorithm `; they render as inkprint algorithm blocks (not code).
+- Regular code uses language fences (` ```ts `, ` ```solidity `, etc.) and keeps the dark code styling.
+- Bare external URLs become "link mentions" automatically; custom link text opts out of that behavior.
+- Standalone embed URLs (e.g., Dune embeds) auto-render as themed iframes and stay in sync with site theme.
+- Mermaid diagrams and images are clickable for a full-screen preview.
+- Update `AGENTS.md` whenever new UI components or content features are added so direction stays current.
+
+## Notes UX features
+
+- Share button copies the current page URL; it appears near the note date and at the end.
+- External links inside notes open in a new tab with `noopener noreferrer`.
+- Math rendering uses KaTeX with inline `$...$` and display `$$...$$`.
+
+## Interactive components
+
+- `src/components/SearchVisualizer.astro` renders the interpolation/binary search demos; keep layout compact and inkprint-aligned.
+- Visualizer layout follows a Desmos-style split: top bar with title/metrics and window actions, left rail for controls/readout/compare, and a dominant plot on the right.
+- The visualizer breaks out of the prose width via the `search-visualizer-frame` wrapper; keep the width fluid and centered.
+- Use `src/components/FullscreenFrame.astro` for fullscreen affordances; wire `data-fullscreen-toggle` and `data-fullscreen-close` buttons and keep open/close motion subtle.
+- Use MDX to import components (`import SearchVisualizer from "@/components/SearchVisualizer.astro";`) and pass minimal props.
+- New interactive components should follow the same typography pairing and solid-border aesthetic.
 
 ## Gotchas
 

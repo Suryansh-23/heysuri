@@ -1,4 +1,6 @@
 ---
+import FullscreenFrame from "@/components/FullscreenFrame.astro";
+
 const {
   id = "",
   title = "Search visualizer",
@@ -66,215 +68,267 @@ const config = {
 const configJson = JSON.stringify(config);
 ---
 
-<section
-  class="search-visualizer not-prose"
-  data-search-visualizer
-  data-config={configJson}
-  data-visualizer-id={id}
->
-  <header class="search-visualizer__header">
-    <div class="search-visualizer__heading">
-      <p class="search-visualizer__eyebrow">Mini visualizer</p>
-      <h3 class="search-visualizer__title">{title}</h3>
-      {description && (
-        <p class="search-visualizer__description">{description}</p>
-      )}
-    </div>
-    {
-      resolvedFeatures.showMetrics && (
-        <dl class="search-visualizer__metrics">
-          <div>
-            <dt>Reads</dt>
-            <dd data-metric="reads">0</dd>
-          </div>
-          <div>
-            <dt>Iteration</dt>
-            <dd data-metric="iteration">0</dd>
-          </div>
-          <div>
-            <dt>Interval</dt>
-            <dd data-metric="interval">-</dd>
-          </div>
-        </dl>
-      )
-    }
-  </header>
-
-  <div class="search-visualizer__body">
-    <div class="search-visualizer__plot">
-      <div class="search-visualizer__plot-meta">
-        <span data-target-label>Target: --</span>
-        <span data-status-label>--</span>
-      </div>
-      <canvas data-visualizer-canvas></canvas>
-      <div class="search-visualizer__plot-axis">
-        <span>Block number -&gt;</span>
-        <span>Timestamp ^</span>
-      </div>
-    </div>
-
-    <div class="search-visualizer__panel">
-      <div class="search-visualizer__controls">
-        {resolvedFeatures.showAlgorithmSelect && (
-          <label class="search-visualizer__control">
-            <span>Algorithm</span>
-            <select data-control="algorithm"></select>
-          </label>
-        )}
-        {resolvedFeatures.showDatasetControls && (
-          <label class="search-visualizer__control">
-            <span>Distribution preset</span>
-            <select data-control="preset"></select>
-          </label>
-        )}
-        {resolvedFeatures.showDatasetControls && (
-          <label class="search-visualizer__control">
-            <span>
-              Array size <strong data-control-value="n"></strong>
-            </span>
-            <input
-              type="range"
-              min="1000"
-              max="50000"
-              step="500"
-              data-control="n"
-            />
-          </label>
-        )}
-        {resolvedFeatures.showDatasetControls && (
-          <label class="search-visualizer__control">
-            <span>
-              Noise <strong data-control-value="noise"></strong>
-            </span>
-            <input
-              type="range"
-              min="0"
-              max="0.9"
-              step="0.05"
-              data-control="noise"
-            />
-          </label>
-        )}
-        {resolvedFeatures.showDatasetControls &&
-          resolvedFeatures.showDuplicateControls && (
-            <label class="search-visualizer__control">
-              <span>
-                Duplicates <strong data-control-value="dup"></strong>
-              </span>
-              <input
-                type="range"
-                min="0"
-                max="0.4"
-                step="0.02"
-                data-control="duplicate-prob"
-              />
-            </label>
+<FullscreenFrame class="search-visualizer-frame not-prose">
+  <section
+    class="search-visualizer"
+    data-search-visualizer
+    data-config={configJson}
+    data-visualizer-id={id}
+  >
+    <div class="search-visualizer__topbar">
+      <div class="search-visualizer__branding">
+        <p class="search-visualizer__eyebrow">Mini visualizer</p>
+        <div class="search-visualizer__title-block">
+          <h3 class="search-visualizer__title">{title}</h3>
+          {description && (
+            <p class="search-visualizer__description">{description}</p>
           )}
-        {resolvedFeatures.showDatasetControls &&
-          resolvedFeatures.showDuplicateControls && (
-            <label class="search-visualizer__control">
-              <span>
-                Plateau length <strong data-control-value="dup-len"></strong>
-              </span>
-              <input
-                type="range"
-                min="4"
-                max="40"
-                step="2"
-                data-control="duplicate-len"
-              />
-            </label>
-          )}
-        {resolvedFeatures.showSipControls && (
-          <label class="search-visualizer__control">
-            <span>
-              SIP slope refresh (k)
-              <strong data-control-value="slope"></strong>
-            </span>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-              data-control="slope-interval"
-            />
-          </label>
+        </div>
+      </div>
+      <div class="search-visualizer__top-actions">
+        {resolvedFeatures.showMetrics && (
+          <dl class="search-visualizer__metrics">
+            <div>
+              <dt>Reads</dt>
+              <dd data-metric="reads">0</dd>
+            </div>
+            <div>
+              <dt>Iteration</dt>
+              <dd data-metric="iteration">0</dd>
+            </div>
+            <div>
+              <dt>Interval</dt>
+              <dd data-metric="interval">-</dd>
+            </div>
+          </dl>
         )}
-        {resolvedFeatures.showTargetControl && (
-          <label class="search-visualizer__control">
-            <span>
-              Target <strong data-control-value="target"></strong>
-            </span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              data-control="target"
-            />
-          </label>
-        )}
+        <div class="search-visualizer__window-actions">
+          <button
+            type="button"
+            class="search-visualizer__window-button"
+            data-fullscreen-toggle
+            aria-label="Expand visualizer"
+          >
+            Expand
+          </button>
+          <button
+            type="button"
+            class="search-visualizer__window-button"
+            data-fullscreen-close
+            aria-label="Close full screen"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-visualizer__layout">
+      <aside class="search-visualizer__rail">
         {resolvedFeatures.showPlaybackControls && (
-          <div class="search-visualizer__actions">
-            <button type="button" data-control="step">Step</button>
-            <button type="button" data-control="play">Play</button>
-            <button type="button" data-control="reset">Reset</button>
+          <div class="search-visualizer__rail-block">
+            <p class="search-visualizer__rail-title">Playback</p>
+            <div class="search-visualizer__actions">
+              <button type="button" data-control="step">Step</button>
+              <button type="button" data-control="play">Play</button>
+              <button type="button" data-control="reset">Reset</button>
+            </div>
+            {resolvedFeatures.showSpeedControl && (
+              <label class="search-visualizer__control search-visualizer__control--wide">
+                <span>
+                  Speed <strong data-control-value="speed"></strong>
+                </span>
+                <input
+                  type="range"
+                  min="120"
+                  max="1200"
+                  step="40"
+                  data-control="speed"
+                />
+              </label>
+            )}
           </div>
         )}
-        {resolvedFeatures.showPlaybackControls &&
-          resolvedFeatures.showSpeedControl && (
-            <label class="search-visualizer__control">
-              <span>
-                Speed <strong data-control-value="speed"></strong>
-              </span>
-              <input
-                type="range"
-                min="120"
-                max="1200"
-                step="40"
-                data-control="speed"
-              />
-            </label>
-          )}
+
+        <div class="search-visualizer__rail-block">
+          <p class="search-visualizer__rail-title">Controls</p>
+          <div class="search-visualizer__controls">
+            {resolvedFeatures.showAlgorithmSelect && (
+              <label class="search-visualizer__control">
+                <span>Algorithm</span>
+                <select data-control="algorithm"></select>
+              </label>
+            )}
+            {resolvedFeatures.showDatasetControls && (
+              <label class="search-visualizer__control">
+                <span>Distribution preset</span>
+                <select data-control="preset"></select>
+              </label>
+            )}
+            {resolvedFeatures.showDatasetControls && (
+              <label class="search-visualizer__control search-visualizer__control--wide">
+                <span>
+                  Array size <strong data-control-value="n"></strong>
+                </span>
+                <input
+                  type="range"
+                  min="1000"
+                  max="50000"
+                  step="500"
+                  data-control="n"
+                />
+              </label>
+            )}
+            {resolvedFeatures.showDatasetControls && (
+              <label class="search-visualizer__control search-visualizer__control--wide">
+                <span>
+                  Noise <strong data-control-value="noise"></strong>
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="0.9"
+                  step="0.05"
+                  data-control="noise"
+                />
+              </label>
+            )}
+            {resolvedFeatures.showDatasetControls &&
+              resolvedFeatures.showDuplicateControls && (
+                <label class="search-visualizer__control search-visualizer__control--wide">
+                  <span>
+                    Duplicates <strong data-control-value="dup"></strong>
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="0.4"
+                    step="0.02"
+                    data-control="duplicate-prob"
+                  />
+                </label>
+              )}
+            {resolvedFeatures.showDatasetControls &&
+              resolvedFeatures.showDuplicateControls && (
+                <label class="search-visualizer__control search-visualizer__control--wide">
+                  <span>
+                    Plateau length <strong data-control-value="dup-len"></strong>
+                  </span>
+                  <input
+                    type="range"
+                    min="4"
+                    max="40"
+                    step="2"
+                    data-control="duplicate-len"
+                  />
+                </label>
+              )}
+            {resolvedFeatures.showSipControls && (
+              <label class="search-visualizer__control search-visualizer__control--wide">
+                <span>
+                  SIP slope refresh (k)
+                  <strong data-control-value="slope"></strong>
+                </span>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  data-control="slope-interval"
+                />
+              </label>
+            )}
+            {resolvedFeatures.showTargetControl && (
+              <label class="search-visualizer__control search-visualizer__control--wide">
+                <span>
+                  Target <strong data-control-value="target"></strong>
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  data-control="target"
+                />
+              </label>
+            )}
+          </div>
+        </div>
+
+        <div class="search-visualizer__rail-block">
+          <p class="search-visualizer__rail-title">Readout</p>
+          <div class="search-visualizer__stats" data-stats>
+            <div>
+              <span>Probe</span>
+              <strong data-stat="probe">-</strong>
+            </div>
+            <div>
+              <span>L / R</span>
+              <strong data-stat="lr">-</strong>
+            </div>
+            <div>
+              <span>V[L] / V[R]</span>
+              <strong data-stat="values">-</strong>
+            </div>
+            <div>
+              <span>Formula</span>
+              <strong data-stat="formula">-</strong>
+            </div>
+          </div>
+        </div>
+
+        {resolvedFeatures.showWhyFails && (
+          <div class="search-visualizer__rail-block search-visualizer__why" data-why>
+            <p class="search-visualizer__rail-title">Why this fails</p>
+            <ul data-why-list></ul>
+          </div>
+        )}
+
+        {resolvedFeatures.showCompare && (
+          <div
+            class="search-visualizer__rail-block search-visualizer__compare"
+            data-compare
+          >
+            <p class="search-visualizer__rail-title">Compare modes</p>
+            <div class="search-visualizer__compare-list" data-compare-list></div>
+          </div>
+        )}
+      </aside>
+
+      <div class="search-visualizer__plot-area">
+        <div class="search-visualizer__plot">
+          <div class="search-visualizer__plot-meta">
+            <span data-target-label>Target: --</span>
+            <span data-status-label>--</span>
+          </div>
+          <canvas data-visualizer-canvas></canvas>
+          <div class="search-visualizer__plot-axis">
+            <span>Block number -&gt;</span>
+            <span>Timestamp ^</span>
+          </div>
+        </div>
       </div>
-
-      <div class="search-visualizer__stats" data-stats>
-        <div>
-          <span>Probe</span>
-          <strong data-stat="probe">-</strong>
-        </div>
-        <div>
-          <span>L / R</span>
-          <strong data-stat="lr">-</strong>
-        </div>
-        <div>
-          <span>V[L] / V[R]</span>
-          <strong data-stat="values">-</strong>
-        </div>
-        <div>
-          <span>Formula</span>
-          <strong data-stat="formula">-</strong>
-        </div>
-      </div>
-
-      {resolvedFeatures.showWhyFails && (
-        <div class="search-visualizer__why" data-why>
-          <p class="search-visualizer__why-title">Why this fails</p>
-          <ul data-why-list></ul>
-        </div>
-      )}
-
-      {resolvedFeatures.showCompare && (
-        <div class="search-visualizer__compare" data-compare>
-          <p class="search-visualizer__compare-title">Compare modes</p>
-          <div class="search-visualizer__compare-list" data-compare-list></div>
-        </div>
-      )}
     </div>
-  </div>
-</section>
+  </section>
+</FullscreenFrame>
 
 <style>
+  :global(.search-visualizer-frame) {
+    position: relative;
+  }
+
+  :global(.search-visualizer-frame:not(.is-fullscreen)) {
+    width: min(94vw, 1040px);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  :global(.search-visualizer-frame.is-fullscreen) {
+    width: 100%;
+    margin: 0;
+    transform: none;
+  }
+
   .search-visualizer {
     --sv-bg: var(--color-surface);
     --sv-border: var(--color-border);
@@ -282,12 +336,11 @@ const configJson = JSON.stringify(config);
     --sv-muted: var(--color-muted-text);
     --sv-accent: var(--color-accent);
     --sv-accent-muted: var(--color-accent-muted);
+    --sv-plot-height: clamp(200px, 28vw, 280px);
 
     border: 1px solid var(--sv-border);
     background: var(--sv-bg);
-    padding: clamp(1rem, 2vw, 1.5rem);
     display: grid;
-    gap: 1.5rem;
   }
 
   :global(.dark) .search-visualizer {
@@ -299,47 +352,76 @@ const configJson = JSON.stringify(config);
     --sv-accent-muted: var(--color-dark-accent-muted);
   }
 
-  .search-visualizer__header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: space-between;
-    align-items: flex-start;
+  :global(.search-visualizer-frame.is-fullscreen) .search-visualizer {
+    --sv-plot-height: clamp(280px, 55vh, 460px);
   }
 
-  .search-visualizer__heading {
-    max-width: 42ch;
+  .search-visualizer__topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid var(--sv-border);
+    background: var(--color-bg);
+  }
+
+  :global(.dark) .search-visualizer__topbar {
+    background: var(--color-dark-bg);
+  }
+
+  .search-visualizer__branding {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .search-visualizer__title-block {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
   }
 
   .search-visualizer__eyebrow {
-    margin: 0 0 0.25rem;
+    margin: 0;
     font-family: var(--font-sans);
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
+    font-size: 0.6rem;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--sv-muted);
   }
 
   .search-visualizer__title {
     margin: 0;
-    font-size: 1.5rem;
-    line-height: 1.2;
+    font-size: 1.05rem;
+    line-height: 1.3;
     color: var(--sv-ink);
   }
 
   .search-visualizer__description {
-    margin: 0.6rem 0 0;
+    margin: 0;
     color: var(--sv-muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .search-visualizer__top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
   }
 
   .search-visualizer__metrics {
-    display: grid;
-    gap: 0.6rem;
-    text-align: right;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    align-items: center;
     font-family: var(--font-sans);
-    font-size: 0.65rem;
+    font-size: 0.55rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--sv-muted);
@@ -347,89 +429,128 @@ const configJson = JSON.stringify(config);
   }
 
   .search-visualizer__metrics div {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
+    display: grid;
+    gap: 0.15rem;
+    padding-left: 0.65rem;
+    border-left: 1px solid var(--sv-border);
+  }
+
+  .search-visualizer__metrics div:first-child {
+    border-left: none;
+    padding-left: 0;
   }
 
   .search-visualizer__metrics dd {
     margin: 0;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
     color: var(--sv-ink);
   }
 
-  .search-visualizer__body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    gap: 1.5rem;
+  .search-visualizer__window-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
   }
 
-  .search-visualizer__plot {
+  .search-visualizer__window-button {
     border: 1px solid var(--sv-border);
     background: var(--color-bg);
-    padding: 0.75rem;
-    display: grid;
-    gap: 0.75rem;
+    color: var(--sv-ink);
+    font-family: var(--font-sans);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.45rem;
+    cursor: pointer;
   }
 
-  :global(.dark) .search-visualizer__plot {
+  :global(.dark) .search-visualizer__window-button {
     background: var(--color-dark-bg);
   }
 
-  .search-visualizer__plot-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem;
-    font-family: var(--font-sans);
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--sv-muted);
+  .search-visualizer__window-button:hover {
+    border-color: var(--sv-muted);
+    transform: translateY(-1px);
   }
 
-  .search-visualizer__plot canvas {
-    width: 100%;
-    height: clamp(220px, 32vw, 320px);
-    border: 1px solid var(--sv-border);
-    background: var(--color-surface);
-    cursor: crosshair;
+  .search-visualizer__window-button[data-fullscreen-close] {
+    display: none;
   }
 
-  :global(.dark) .search-visualizer__plot canvas {
-    background: var(--color-dark-surface);
+  :global(.search-visualizer-frame.is-fullscreen)
+    .search-visualizer__window-button[data-fullscreen-close] {
+    display: inline-flex;
   }
 
-  .search-visualizer__plot-axis {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-sans);
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--sv-muted);
+  :global(.search-visualizer-frame.is-fullscreen)
+    .search-visualizer__window-button[data-fullscreen-toggle] {
+    display: none;
   }
 
-  .search-visualizer__panel {
+  .search-visualizer__layout {
     display: grid;
-    gap: 1.25rem;
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .search-visualizer__rail {
+    border-right: 1px solid var(--sv-border);
+    background: var(--color-bg);
+    padding: 0.65rem;
+    display: grid;
+    gap: 0.7rem;
     align-content: start;
+    overflow: auto;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  :global(.dark) .search-visualizer__rail {
+    background: var(--color-dark-bg);
+  }
+
+  .search-visualizer__rail-block {
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--sv-border);
+  }
+
+  .search-visualizer__rail-block:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .search-visualizer__rail-title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 0.55rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sv-muted);
   }
 
   .search-visualizer__controls {
     display: grid;
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem 0.6rem;
+    align-items: end;
   }
 
   .search-visualizer__control {
     display: grid;
-    gap: 0.35rem;
+    gap: 0.3rem;
     font-family: var(--font-sans);
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--sv-muted);
+    min-width: 0;
+  }
+
+  .search-visualizer__control--wide {
+    grid-column: 1 / -1;
   }
 
   .search-visualizer__control strong {
@@ -443,9 +564,9 @@ const configJson = JSON.stringify(config);
     border: 1px solid var(--sv-border);
     background: var(--color-bg);
     color: var(--sv-ink);
-    padding: 0.35rem 0.5rem;
+    padding: 0.25rem 0.4rem;
     font-family: var(--font-sans);
-    font-size: 0.75rem;
+    font-size: 0.68rem;
   }
 
   :global(.dark) .search-visualizer__control input,
@@ -455,12 +576,14 @@ const configJson = JSON.stringify(config);
 
   .search-visualizer__control input[type="range"] {
     padding: 0;
+    width: 100%;
+    accent-color: var(--sv-accent);
   }
 
   .search-visualizer__actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
 
   .search-visualizer__actions button {
@@ -468,10 +591,10 @@ const configJson = JSON.stringify(config);
     background: var(--color-bg);
     color: var(--sv-ink);
     font-family: var(--font-sans);
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 0.45rem 0.5rem;
+    padding: 0.3rem 0.35rem;
     cursor: pointer;
   }
 
@@ -485,51 +608,22 @@ const configJson = JSON.stringify(config);
   }
 
   .search-visualizer__stats {
-    border: 1px solid var(--sv-border);
-    padding: 0.75rem;
     display: grid;
-    gap: 0.6rem;
+    gap: 0.35rem;
     font-family: var(--font-sans);
-    font-size: 0.7rem;
+    font-size: 0.58rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    background: var(--color-bg);
+    letter-spacing: 0.14em;
     color: var(--sv-muted);
-  }
-
-  :global(.dark) .search-visualizer__stats {
-    background: var(--color-dark-bg);
   }
 
   .search-visualizer__stats strong {
     display: block;
     color: var(--sv-ink);
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
     text-transform: none;
     font-family: var(--font-serif);
-  }
-
-  .search-visualizer__why,
-  .search-visualizer__compare {
-    border: 1px solid var(--sv-border);
-    padding: 0.75rem;
-    background: var(--color-bg);
-  }
-
-  :global(.dark) .search-visualizer__why,
-  :global(.dark) .search-visualizer__compare {
-    background: var(--color-dark-bg);
-  }
-
-  .search-visualizer__why-title,
-  .search-visualizer__compare-title {
-    margin: 0 0 0.6rem;
-    font-family: var(--font-sans);
-    font-size: 0.65rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--sv-muted);
   }
 
   .search-visualizer__why ul {
@@ -537,25 +631,25 @@ const configJson = JSON.stringify(config);
     padding: 0;
     margin: 0;
     display: grid;
-    gap: 0.4rem;
-    font-size: 0.85rem;
+    gap: 0.3rem;
+    font-size: 0.8rem;
     color: var(--sv-ink);
   }
 
   .search-visualizer__compare-list {
     display: grid;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
   .search-visualizer__compare-row {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    gap: 0.6rem;
+    gap: 0.5rem;
     align-items: center;
     font-family: var(--font-sans);
-    font-size: 0.7rem;
+    font-size: 0.58rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     color: var(--sv-muted);
   }
 
@@ -577,15 +671,90 @@ const configJson = JSON.stringify(config);
     background: var(--sv-accent);
   }
 
+  .search-visualizer__plot-area {
+    padding: clamp(0.6rem, 1.3vw, 0.85rem);
+    background: var(--sv-bg);
+    min-width: 0;
+    display: grid;
+  }
+
+  .search-visualizer__plot {
+    border: 1px solid var(--sv-border);
+    background: var(--color-bg);
+    padding: 0.55rem;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  :global(.dark) .search-visualizer__plot {
+    background: var(--color-dark-bg);
+  }
+
+  .search-visualizer__plot-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.4rem;
+    font-family: var(--font-sans);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--sv-muted);
+  }
+
+  .search-visualizer__plot canvas {
+    width: 100%;
+    height: var(--sv-plot-height);
+    border: 1px solid var(--sv-border);
+    background: var(--color-surface);
+    cursor: crosshair;
+  }
+
+  :global(.dark) .search-visualizer__plot canvas {
+    background: var(--color-dark-surface);
+  }
+
+  .search-visualizer__plot-axis {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-sans);
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sv-muted);
+  }
+
+  @media (max-width: 1000px) {
+    .search-visualizer__controls {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 900px) {
-    .search-visualizer__body {
+    :global(.search-visualizer-frame:not(.is-fullscreen)) {
+      width: 100%;
+      margin-left: 0;
+      transform: none;
+    }
+
+    .search-visualizer__layout {
       grid-template-columns: 1fr;
     }
 
-    .search-visualizer__metrics {
-      text-align: left;
+    .search-visualizer__rail {
+      border-right: none;
+      border-top: 1px solid var(--sv-border);
+      max-height: none;
+    }
+
+    .search-visualizer__top-actions {
       width: 100%;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      justify-content: space-between;
+    }
+
+    .search-visualizer__metrics {
+      width: 100%;
+      justify-content: flex-start;
     }
   }
 </style>

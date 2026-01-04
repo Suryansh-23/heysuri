@@ -1,0 +1,201 @@
+---
+const { class: className = "" } = Astro.props;
+---
+
+<div class={`fullscreen-frame ${className}`} data-fullscreen-root>
+  <div class="fullscreen-frame__backdrop" data-fullscreen-backdrop></div>
+  <div class="fullscreen-frame__stage">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .fullscreen-frame {
+    position: relative;
+  }
+
+  .fullscreen-frame__backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+
+  :global(.dark) .fullscreen-frame__backdrop {
+    background: var(--color-dark-bg);
+  }
+
+  .fullscreen-frame__stage {
+    position: relative;
+    z-index: 1;
+    transition:
+      transform 0.22s ease,
+      opacity 0.22s ease;
+  }
+
+  .fullscreen-frame.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    padding: clamp(0.75rem, 2.5vw, 2rem);
+    background: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global(.dark) .fullscreen-frame.is-fullscreen {
+    background: var(--color-dark-bg);
+  }
+
+  .fullscreen-frame.is-fullscreen .fullscreen-frame__backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .fullscreen-frame.is-fullscreen .fullscreen-frame__stage {
+    width: min(1200px, 100%);
+    max-height: 100%;
+    overflow: auto;
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .fullscreen-frame.is-fullscreen .fullscreen-frame__stage {
+    animation: fullscreen-pop 0.22s ease;
+  }
+
+  .fullscreen-frame.is-fullscreen.is-closing .fullscreen-frame__backdrop {
+    opacity: 0;
+  }
+
+  .fullscreen-frame.is-fullscreen.is-closing .fullscreen-frame__stage {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    animation: none;
+  }
+
+  @keyframes fullscreen-pop {
+    0% {
+      opacity: 0.85;
+      transform: translateY(8px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fullscreen-frame__backdrop,
+    .fullscreen-frame__stage {
+      transition: none;
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const GLOBAL_KEY = "__fullscreenFrameInitialized";
+
+  if (!(window as typeof window & { [key: string]: boolean })[GLOBAL_KEY]) {
+    (window as typeof window & { [key: string]: boolean })[GLOBAL_KEY] = true;
+
+    const placeholderMap = new WeakMap<HTMLElement, HTMLElement>();
+    let activeRoot: HTMLElement | null = null;
+
+    const setBodyLocked = (locked: boolean) => {
+      document.documentElement.style.overflow = locked ? "hidden" : "";
+    };
+
+    const openRoot = (root: HTMLElement) => {
+      if (root.classList.contains("is-fullscreen")) return;
+
+      if (activeRoot && activeRoot !== root) {
+        closeRoot(activeRoot, true);
+      }
+
+      const rect = root.getBoundingClientRect();
+      const placeholder = document.createElement("div");
+      placeholder.style.height = `${rect.height}px`;
+      placeholder.style.width = "100%";
+      placeholder.dataset.fullscreenPlaceholder = "true";
+      root.parentNode?.insertBefore(placeholder, root);
+      placeholderMap.set(root, placeholder);
+
+      root.classList.remove("is-closing");
+      root.classList.add("is-fullscreen");
+      root.setAttribute("aria-expanded", "true");
+      activeRoot = root;
+      setBodyLocked(true);
+    };
+
+    const closeRoot = (root: HTMLElement, immediate = false) => {
+      if (!root.classList.contains("is-fullscreen")) return;
+      root.setAttribute("aria-expanded", "false");
+      root.classList.add("is-closing");
+
+      const cleanup = () => {
+        root.classList.remove("is-fullscreen", "is-closing");
+        const placeholder = placeholderMap.get(root);
+        if (placeholder) placeholder.remove();
+        placeholderMap.delete(root);
+        if (activeRoot === root) activeRoot = null;
+        setBodyLocked(false);
+      };
+
+      if (immediate) {
+        root.classList.remove("is-closing");
+        cleanup();
+        return;
+      }
+
+      window.setTimeout(cleanup, 240);
+    };
+
+    const bindRoot = (root: HTMLElement) => {
+      if (root.dataset.fullscreenBound === "true") return;
+      root.dataset.fullscreenBound = "true";
+
+      const toggles = root.querySelectorAll<HTMLElement>(
+        "[data-fullscreen-toggle]",
+      );
+      const closes = root.querySelectorAll<HTMLElement>(
+        "[data-fullscreen-close]",
+      );
+      const backdrop = root.querySelector<HTMLElement>(
+        "[data-fullscreen-backdrop]",
+      );
+
+      toggles.forEach((toggle) => {
+        toggle.addEventListener("click", () => openRoot(root));
+      });
+
+      closes.forEach((close) => {
+        close.addEventListener("click", () => closeRoot(root));
+      });
+
+      backdrop?.addEventListener("click", () => closeRoot(root));
+    };
+
+    const bindAll = () => {
+      document
+        .querySelectorAll<HTMLElement>("[data-fullscreen-root]")
+        .forEach(bindRoot);
+    };
+
+    bindAll();
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && activeRoot) {
+        closeRoot(activeRoot);
+      }
+    });
+
+    document.addEventListener("astro:page-load", () => {
+      bindAll();
+    });
+  }
+</script>
