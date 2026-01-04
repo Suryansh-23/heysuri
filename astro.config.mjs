@@ -1,4 +1,7 @@
 import { defineConfig } from "astro/config";
+import mdx from "@astrojs/mdx";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import rehypeLinkMentions from "./src/lib/rehypeLinkMentions.mjs";
@@ -21,14 +24,17 @@ const siteUrl =
   normalizeUrl(vercelUrl) ||
   "http://localhost:4321";
 
-export default defineConfig({
-  integrations: [sitemap()],
-  markdown: {
-    shikiConfig: {
-      theme: "dark-plus",
-    },
-    rehypePlugins: [rehypeLinkMentions],
+const markdownConfig = {
+  shikiConfig: {
+    theme: "dark-plus",
   },
+  remarkPlugins: [remarkMath],
+  rehypePlugins: [rehypeKatex, rehypeLinkMentions],
+};
+
+export default defineConfig({
+  integrations: [mdx({ extendMarkdownConfig: true }), sitemap()],
+  markdown: markdownConfig,
   site: siteUrl,
   trailingSlash: "always",
   build: {

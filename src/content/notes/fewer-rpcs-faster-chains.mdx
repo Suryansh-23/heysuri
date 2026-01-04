@@ -1,0 +1,463 @@
+---
+title: "Fewer RPCs, Faster Chains: Rethinking Block-by-Time Search"
+description: "A production tale of speeding up block-by-timestamp lookups with interpolation, SIP/TIP experiments, and interpolated-binary safeguards."
+publicationDate: 2026-01-04
+tags:
+  - rpc
+  - infra
+  - algorithms
+---
+
+import SearchVisualizer from "@/components/SearchVisualizer.astro";
+
+## Preamble
+
+Weird things happen when you become curious about a problem.
+
+This is the story of my expedition to speed up a rather uninteresting production problem by ~3x — and what i learned from it.
+
+## The Problem
+
+The problem is a very basic one: how do you go from timestamps to block numbers for a chain? This seemingly uninteresting and rather simple problem is of great use for many products in the space. To name a few, a lot of apps use such APIs for user-facing integrations where the regular user can’t simply rely on an obtuse block number — instead they need something with more context, which is usually a timestamp.
+
+For example, if i want to see the state of my wallet at a particular time in history (the balance, the assets, positions etc.) then it is necessary to have the ability to lookup the block number from timestamp. This allows me to index the blockchain’s state at that particular block number to see my wallet state.
+
+This is pretty much a problem, a lot of providers already provide APIs for this. Here are some of the quality APIs anybody can use for this very use-case:
+
+- Etherscan - https://docs.etherscan.io/api-reference/endpoint/getblocknobytime
+- Defi Llama - https://api-docs.defillama.com/#tag/coins/get/block/%7Bchain%7D/%7Btimestamp%7D
+- QuickNode - https://www.quicknode.com/docs/ethereum/qn_getBlockFromTimestamp
+- Even Cast has a cmd for this - https://getfoundry.sh/cast/reference/find-block#cast-find-block
+
+Now, most of these APIs rely mainly on binary search + some form of caching layer (db/kv). The caching is a big multiplier once you have enough repeated queries flowing through.
+
+This is the exact component i wanted to speed up.
+
+## Process
+
+### 1st Optimization - Checkpoints
+
+One of the most basic optimization hacks that i started with was using the existing db/kv caching layer for fetching checkpoints. The usual binary search algorithm is of time complexity $O(log\ n)$ — which means if i essentially reduce the $n$ here, i can do a very easy speed up.
+
+The idea was to use the nearest available pre-computed records that i had for the API. Using these lower and upper bounds we reduce our search space a lot. And even if the block is a newly finalized one, we still have a lower bound from previous runs.
+
+### 2nd Optimization - New Algorithm
+
+Now, usually i would be satisfied with these results considering the fact that binary search with a cache is already kind of overkill. But my intuition kept poking at the nature of the distribution of block time.
+
+Design goal: fewer RPC calls, not fewer CPU cycles.
+
+This idea led me to do some small experiments on a Dune query to see the overall distribution of block time on Ethereum mainnet. This had a small difficulty in itself due to the compute intensive nature of such a query — thankfully some smart people had already figured out a way to get a rough approximation of the actual block time across different intervals.
+
+**Reference Dune Query** - https://dune.com/queries/2626578?utm_source=share&utm_medium=copy&utm_campaign=query
+
+**My Dune Query** - https://dune.com/queries/6439212?utm_source=share&utm_medium=copy&utm_campaign=query
+
+[https://dune.com/embeds/6439212/10236610?darkMode=true](https://dune.com/embeds/6439212/10236610?darkMode=true)
+
+From this Dune query, i realized that the average block time usually stays within a confined range of values — i.e. it’s uniform-ish. Which means there’s a possibility to speed things up here.
+
+> Note: My primary focus was Ethereum mainnet here. But the same techniques and methodologies can easily be applied for other chains as well.
+
+Then, i started looking into search algorithms that can work on sorted and uniformly distributed data. The most common solution was interpolation search. If you haven’t seen it before, here’s the idea.
+
+#### Interpolation Search (the idea)
+
+Interpolation search is what you get when you ask:
+
+> “if the data is sorted and _kinda_ uniformly distributed… why would i keep guessing the middle every time?”
+
+Binary search always probes the middle index and halves the search space. Interpolation search instead _estimates_ the position based on the target value relative to the range.
+
+In the ideal case (uniform-ish data), the estimate lands _very_ close to the answer, and the search collapses insanely fast.
+
+For our problem, the “sorted array” is basically:
+
+- index → block number
+- value → block timestamp
+
+So “find the block for timestamp `t*`” becomes: find the smallest `b` such that `timestamp(b) ≥ t*` (and then pick the closest among `b` and `b-1`).
+
+#### Pseudocode + complexity
+
+Here’s the “block-by-timestamp” interpolation search in proper CS notation (with the reality that each `TS(b)` requires an RPC call):
+
+```text
+Algorithm InterpolationSearchTimestamp
+Input:
+  t*          : target timestamp
+  b_min, b_max: inclusive block bounds (from checkpoints / earliest / latest)
+  TS(b)       : function that returns block b's timestamp (RPC)
+Output:
+  b_hat       : block number closest to t*
+
+1:  L ← b_min
+2:  R ← b_max
+3:  tL ← TS(L)
+4:  tR ← TS(R)
+5:  while L ≤ R do
+6:      if tR = tL then
+7:          break  // avoid division by 0, fall back
+8:      // Interpolation step (linear model)
+9:      pos ← L + ⌊ (t* - tL) * (R - L) / (tR - tL) ⌋
+10:     pos ← clamp(pos, L, R)
+11:     tP ← TS(pos)
+12:     if tP < t* then
+13:         L ← pos + 1
+14:         tL ← TS(L)
+15:     else
+16:         R ← pos - 1
+17:         tR ← TS(R)
+18:  // finalize: pick closest around the ceil boundary
+19:  b_ceil ← max(L, b_min)
+20:  return argmin_{b ∈ {b_ceil-1, b_ceil}} |TS(b) - t*|
+```
+
+**Complexity (in the classic model):**
+
+- Expected: $O(\log\log n)$ comparisons on uniformly distributed data
+- Worst-case: $O(n)$ on adversarial / weird distributions
+
+**Complexity (in our RPC model):**
+
+- Binary search: ~$O(\log n)$ RPC calls
+- Interpolation search: expected ~$O(\log\log n)$ RPC calls, but with guard-rails it effectively becomes “fast when it works, safe when it doesn’t”
+
+And that’s the key: i don’t care about CPU instructions here. I care about **RPC calls**. Each extra `eth_getBlockByNumber` is a roundtrip to a provider, plus rate limits, plus jitter.
+
+So even shaving ~10–20 calls off per query is a huge deal.
+
+---
+
+#### Mini visualizer: interpolation vs binary
+
+I wanted a Desmos/GeoGebra style way to _feel_ interpolation search, not just read it.
+
+<SearchVisualizer
+  title="Interpolation vs binary on block timestamps"
+  description="Uniform-ish data lets interpolation jump close fast; skewed or duplicate-heavy ranges show the tradeoff."
+  algorithms={["binary", "interpolation"]}
+  defaultAlgorithm="interpolation"
+  presets={["uniform", "piecewise", "skewed", "duplicates"]}
+  defaultPreset="uniform"
+  features={{ showCompare: false, showWhyFails: false }}
+/>
+
+
+---
+
+#### Benchmarks (hiding TIP/SIP for now)
+
+At this point, i stopped trusting vibes and started trusting numbers.
+
+I built a benchmark suite (`eth-block-bench`) that:
+
+- samples timestamps across a chain’s history (even + random)
+- runs each search algorithm in isolated worker threads (fresh clients)
+- reports both latency **and** RPC call counts
+
+Below is a condensed view across the 4 chains i cared about (Ethereum, OP, Base, Arbitrum). SIP/TIP are hidden here on purpose — we’ll come back to them.
+
+| Chain        | Binary (median ms / median calls) | Interpolation (median ms / median calls) | Interpolated Binary (median ms / median calls) | Interp speedup | IntBin speedup |
+| ------------ | --------------------------------- | ---------------------------------------- | ---------------------------------------------- | -------------- | -------------- |
+| Ethereum     | 3030 / 28.5                       | 1087 / 11                                | 1456 / 14                                      | 64.1%          | 51.9%          |
+| OP Mainnet   | 3596 / 31                         | 1166 / 6.5                               | 1032 / 8                                       | 67.6%          | 71.3%          |
+| Base         | 3134 / 29                         | 209 / 3                                  | 211 / 3                                        | 93.3%          | 93.3%          |
+| Arbitrum One | 3364 / 33                         | 2447 / 24                                | 2646 / 25.5                                    | 27.3%          | 21.3%          |
+
+Two immediate takeaways i had:
+
+1. **This isn’t “CPU faster”. It’s “RPC fewer”.**  
+   The ms/call stays in the same ballpark — the win is mostly fewer block lookups.
+
+2. **Uniform-ish chains = interpolation heaven.**  
+   On Base, it’s almost comical: interpolation converges in ~3 calls for most samples.
+
+The “but…” is that not every chain behaves this nicely, and not every timestamp query is equally friendly. That’s where experimentation came in.
+
+---
+
+### 3rd Optimization - Experimentation (SIP & TIP)
+
+Once interpolation search was “obviously good” for Ethereum, my next thought was:
+
+> ok, what’s the next ceiling? can we make interpolation search itself smarter?
+
+That led me to this paper:
+
+- **Efficiently Searching In-Memory Sorted Arrays: Revenge of the Interpolation Search?**  
+  Peter Van Sandt, Yannis Chronis, Jignesh M. Patel — SIGMOD 2019  
+  (PDF: https://pages.cs.wisc.edu/~jignesh/publ/Revenge_of_the_Interpolation_Search.pdf)
+
+The paper proposes two variants:
+
+- **SIP** (Slope reuse Interpolation): reuse the slope (and some math) to make interpolation iterations cheaper
+- **TIP** (Three point Interpolation): use three points to better model non-uniform distributions
+
+Important caveat: the paper is about **in-memory arrays** where the tradeoff is “CPU vs cache misses”.  
+In my world, the “array read” is an **RPC request**. CPU is basically free compared to network.
+
+Still, the ideas are too spicy to ignore — so i implemented them and benchmarked them.
+
+#### SIP pseudocode (rough, adapted for block timestamps)
+
+```text
+Algorithm SIPTimestamp (Slope-Reuse Interpolation)
+Input: t*, b_min, b_max
+1:  L ← b_min ; R ← b_max
+2:  tL ← TS(L) ; tR ← TS(R)
+3:  slope ← (R - L) / (tR - tL)         // computed once (reused)
+4:  pos ← L + ⌊(t* - tL) * slope⌋
+5:  while L ≤ R do
+6:      pos ← clamp(pos, L, R)
+7:      tP ← TS(pos)
+8:      if tP = t* then return pos
+9:      if tP < t* then
+10:         L ← pos + 1
+11:     else
+12:         R ← pos - 1
+13:     // reuse same slope to “nudge” the estimate again
+14:     pos ← pos + ⌊(t* - tP) * slope⌋
+15:  return finalizeClosest(t*)
+```
+
+#### TIP pseudocode (rough, adapted for block timestamps)
+
+The paper’s TIP uses a 3-point interpolation method (Jarratt & Nudds + a cheaper first step).
+For blocks, the intuition is: “if a line is too naive, fit a curve using three samples and jump closer”.
+
+```text
+Algorithm TIPTimestamp (Three-Point Interpolation)
+Input: t*, b_min, b_max
+1:  L ← b_min ; R ← b_max ; M ← ⌊(L+R)/2⌋
+2:  tL ← TS(L) ; tM ← TS(M) ; tR ← TS(R)
+3:  pos ← threePointEstimate(t*, (L,tL), (M,tM), (R,tR))
+4:  while L ≤ R do
+5:      pos ← clamp(pos, L, R)
+6:      tP ← TS(pos)
+7:      if tP < t* then L ← pos else R ← pos
+8:      // rotate points (reuse M, update others) and re-estimate
+9:      M ← pos ; tM ← tP
+10:     pos ← threePointEstimate(t*, (L,tL), (M,tM), (R,tR))
+11:  return finalizeClosest(t*)
+```
+
+#### Mini visualizer: SIP/TIP under stress
+
+<SearchVisualizer
+  title="SIP/TIP and the cost of bad slopes"
+  description="Reuse a slope, then watch it drift on plateaus or step changes. TIP adds curvature but still needs clean data."
+  algorithms={["interpolation", "sip", "tip"]}
+  defaultAlgorithm="sip"
+  presets={["uniform", "piecewise", "duplicates", "skewed"]}
+  defaultPreset="duplicates"
+  features={{ showSipControls: true, showWhyFails: true }}
+  defaults={{ slopeInterval: 4, duplicateProbability: 0.18, duplicateLength: 20 }}
+/>
+
+
+---
+
+#### Results (SIP/TIP)
+
+Here’s the headline summary (median latency + median RPC calls):
+
+| Chain        | Binary (median ms / median calls) | SIP (median ms / median calls) | TIP (median ms / median calls) | SIP vs Bin | TIP vs Bin |
+| ------------ | --------------------------------- | ------------------------------ | ------------------------------ | ---------- | ---------- |
+| Ethereum     | 3030 / 28.5                       | 3135 / 28                      | 3100 / 30                      | +3.5%      | +2.3%      |
+| OP Mainnet   | 3596 / 31                         | 3518 / 30                      | 3832 / 32                      | -2.2%      | +6.6%      |
+| Base         | 3134 / 29                         | 211 / 3                        | 3147 / 30                      | -93.3%     | +0.4%      |
+| Arbitrum One | 3364 / 33                         | 3340 / 33                      | 3644 / 34                      | -0.7%      | +8.3%      |
+
+Full bench (all algos, same run):
+
+| Chain        | Binary      | Interpolation | Interpolated Binary | SIP       | TIP       |
+| ------------ | ----------- | ------------- | ------------------- | --------- | --------- |
+| Ethereum     | 3030 / 28.5 | 1087 / 11     | 1456 / 14           | 3135 / 28 | 3100 / 30 |
+| OP Mainnet   | 3596 / 31   | 1166 / 6.5    | 1032 / 8            | 3518 / 30 | 3832 / 32 |
+| Base         | 3134 / 29   | 209 / 3       | 211 / 3             | 211 / 3   | 3147 / 30 |
+| Arbitrum One | 3364 / 33   | 2447 / 24     | 2646 / 25.5         | 3340 / 33 | 3644 / 34 |
+
+This is where the story got interesting (and slightly annoying):
+
+- **SIP/TIP are not consistently better than interpolation search.**  
+  In fact, for Ethereum/OP/Arb, they mostly behave like “binary search with extra steps”.
+
+- **Base is the exception that proves the rule.**  
+  SIP collapses to ~3 calls because the mapping is close to linear over the sampled ranges.
+
+- **TIP is… brittle.**  
+  On Base it basically degenerates into full binary-search behavior (30–31 calls on distribution samples), even though interpolation is trivially good there.
+
+My interpretation:
+
+1. **The paper optimizes for CPU+cache, not RPC.**  
+   SIP saves computation by reusing slope. But when the slope is wrong (piecewise linear history, plateaus, upgrade epochs), it can cause extra _iterations_ — and iterations = RPC calls.
+
+2. **Duplicate timestamps are a real-world footgun.**  
+   L2s can have multiple blocks with the exact same timestamp (same second). That breaks the “strictly increasing value” mental model and makes “the” correct block non-unique.  
+   TIP even explicitly discusses duplicate values as a special case in the paper — and in practice it still doesn’t translate cleanly to “RPC-backed timestamp arrays”.
+
+3. **Guard conditions + fallbacks are doing a lot of heavy lifting.**  
+   When SIP/TIP stop making progress, we switch to safer search behavior. That keeps worst-case under control, but it also means you often pay the binary-search cost anyway.
+
+So i ended up treating SIP/TIP as “interesting research knobs” rather than a production default.
+
+---
+
+### 4th Optimization - Interpolated Binary Search
+
+After SIP/TIP, my mental model became:
+
+> interpolation is amazing when the data behaves. binary is robust when it doesn’t. i want something in the middle.
+
+That’s where **Interpolated Binary Search** comes in.
+
+It’s basically binary search where the “mid” probe is replaced by an interpolation-based estimate **but** it still maintains the invariant of shrinking the interval safely.
+
+#### Pseudocode (high level)
+
+```text
+Algorithm InterpolatedBinarySearchTimestamp
+Input: t*, b_min, b_max
+1:  L ← b_min ; R ← b_max
+2:  while L ≤ R do
+3:      tL ← TS(L) ; tR ← TS(R)
+4:      if tR = tL then mid ← ⌊(L+R)/2⌋ else
+5:          mid ← L + ⌊(t* - tL) * (R - L) / (tR - tL)⌋
+6:      mid ← clamp(mid, L, R)
+7:      tM ← TS(mid)
+8:      if tM < t* then L ← mid + 1 else R ← mid - 1
+9:  return finalizeClosest(t*)
+```
+
+#### Why this matters (esp. on L2s)
+
+On chains like OP and Arbitrum:
+
+- timestamps can have plateaus (duplicate seconds)
+- block times can change by epoch / load / sequencer behavior
+- the mapping is often **piecewise** linear at best
+
+Pure interpolation search can sometimes make a horrible guess and then spend iterations clawing back.
+Binary search doesn’t care — it just halves reliably, but wastes calls.
+
+Interpolated-binary is the compromise: it tries to jump close when the data is nice, but still converges like binary when it isn’t.
+
+#### Mini visualizer: interpolated binary in the middle
+
+<SearchVisualizer
+  title="Interpolated binary vs interpolation"
+  description="Interpolation probes; binary shrinks the interval. This hybrid keeps both instincts in play."
+  algorithms={["binary", "interpolation", "interpolated-binary"]}
+  defaultAlgorithm="interpolated-binary"
+  presets={["uniform", "piecewise", "chaos", "duplicates"]}
+  defaultPreset="chaos"
+  features={{ showCompare: true, showDuplicateControls: false }}
+  defaults={{ noise: 0.35, duplicateProbability: 0.12 }}
+/>
+
+
+#### Benchmarks (why it’s a good middle ground)
+
+For the same 4 chains:
+
+- On **Ethereum**, pure interpolation is still king (block times are stable enough in aggregate).
+- On **OP**, interpolated-binary edges out interpolation (slightly more calls but better median latency in this run).
+- On **Arbitrum**, interpolation wins but interpolated-binary is still comfortably better than binary overall.
+
+And the big thing: it doesn’t collapse into the SIP/TIP weirdness.
+
+---
+
+### Execution & Benchmark
+
+This part is underrated: the hardest part of this project wasn’t the algorithms, it was getting a benchmark that didn’t lie to me.
+
+In one line:
+
+> sample timestamps → run each algo in its own worker → count RPC calls + latency → export JSON to `data/`
+
+Some “fun” problems i hit while building `eth-block-bench`:
+
+#### 1) RPC reality is messy
+
+- **Rate limits (429s)**: public RPCs are fine until you parallelize.
+- **Pruned nodes**: some RPCs can’t serve early blocks, so even “block 1” can error.
+- **Non-JSON / flaky gateways**: sometimes you just get garbage responses.
+
+So the benchmark had to:
+
+- resolve the **earliest available** block dynamically (not assume genesis is accessible)
+- support **multiple RPC URLs** and rotate them
+- cap each iteration with a **max timeout**, so the benchmark runtime stays stable
+
+#### 2) Isolation matters
+
+If you run algorithms in the same process with the same client, you accidentally benchmark:
+
+- caches
+- warmed connections
+- shared retry state
+
+So i run each algorithm in its own worker thread with its own client. That way the comparison is closer to “independent environments”.
+
+#### 3) Sampling (you can’t hardcode chain history)
+
+For chains other than Ethereum, you can’t assume genesis timestamp or even exact launch time.
+
+So the benchmark does:
+
+- query latest block timestamp
+- binary-search for the earliest available block (pruning aware)
+- generate a timestamp plan (even samples + seeded random samples) across **that** interval
+
+#### 4) Measuring “speed” isn’t enough
+
+Because RPC latency is noisy, i added **RPC efficiency** reporting:
+
+- calls per run (min/median/max)
+- total calls
+
+This becomes the “algorithmic signal” even when milliseconds fluctuate.
+
+#### Exported data
+
+Each chain run exports a JSON file under `data/` (gitignored) with:
+
+- config (samples, retries, workers, timeouts)
+- timestamp plan metadata
+- full per-run results (ms + calls)
+
+This is what i used to write the tables above.
+
+---
+
+### Conclusion
+
+This started as “binary search is slow-ish” and ended up as a reminder that in crypto infra, the real complexity model is:
+
+> how many RPC calls did you just make?
+
+This is the thesis in one line: if you can reduce RPC calls, you win. If you can’t, you’re just moving commas around.
+
+Where i landed (for something i’d actually ship):
+
+- **Checkpoints first**: tighten `b_min/b_max` before you do anything clever.
+- **Interpolation search** when the chain behaves (and surprisingly often, it does).
+- **Interpolated-binary** as the “middle ground” when distributions get weird (plateaus, epoch changes, L2 quirks).
+- **SIP/TIP** stay behind an experimental flag: great research, but not a free win once “array reads” become RPC roundtrips.
+
+The other lesson was meta: a benchmark that lies is worse than no benchmark. The second i parallelized, i started hitting 429s, pruned nodes, and random gateway nonsense — so i had to build the harness (isolation, earliest-block discovery, timeouts, RPC rotation) before trusting any conclusion.
+
+If you’re building a block-by-time API or even a CLI like `cast find-block`, this is the exact kind of low-level optimization that quietly turns “it works” into “it feels instant”.
+
+What i’d do next if i keep going: a tiny meta-algorithm that chooses between interpolation and interpolated-binary based on a few probes, plus the visualizers above so you can literally _see_ when the distribution is lying to you.
+
+### Links
+
+- GitHub Repo: https://github.com/Suryansh-23/eth-block-bench
+- Paper (SIP/TIP): https://pages.cs.wisc.edu/~jignesh/publ/Revenge_of_the_Interpolation_Search.pdf
+- Dune queries:
+  - Reference: https://dune.com/queries/2626578
+  - Mine: https://dune.com/queries/6439212

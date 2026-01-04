@@ -25,4 +25,5 @@ pnpm-debug.log*
 
 TODO.txt
 
-*.pdf
+# reference for TODO & WIP
+ref/

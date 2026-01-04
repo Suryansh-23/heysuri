@@ -221,6 +221,51 @@ const { Content } = await render(entry);
         });
     }
 
+    function getResolvedTheme() {
+      const root = document.documentElement;
+      if (root.classList.contains("dark")) return "dark";
+      if (root.classList.contains("light")) return "light";
+      if (root.classList.contains("system")) {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      return "light";
+    }
+
+    function buildEmbedSrc(baseUrl: string, theme: string, themeParam?: string) {
+      try {
+        const url = new URL(baseUrl);
+        if (themeParam) {
+          const current = url.searchParams.get(themeParam);
+          if (current && ["dark", "light"].includes(current.toLowerCase())) {
+            url.searchParams.set(themeParam, theme);
+          } else {
+            url.searchParams.set(themeParam, theme === "dark" ? "true" : "false");
+          }
+        }
+        return url.toString();
+      } catch {
+        return baseUrl;
+      }
+    }
+
+    function syncEmbedFrames() {
+      const theme = getResolvedTheme();
+      document
+        .querySelectorAll<HTMLElement>(".note-content [data-embed-url]")
+        .forEach((wrapper) => {
+          const iframe = wrapper.querySelector<HTMLIFrameElement>("iframe");
+          const baseUrl = wrapper.dataset.embedUrl;
+          if (!iframe || !baseUrl) return;
+          const themeParam = wrapper.dataset.embedThemeParam;
+          const nextSrc = buildEmbedSrc(baseUrl, theme, themeParam);
+          if (iframe.dataset.embedSrc === nextSrc) return;
+          iframe.dataset.embedSrc = nextSrc;
+          iframe.src = nextSrc;
+        });
+    }
+
     function initShareButtons() {
       const buttons = document.querySelectorAll<HTMLButtonElement>(
         "[data-share-button]",
@@ -343,10 +388,25 @@ const { Content } = await render(entry);
         theme: isDark ? "dark" : "default",
       });
 
-      await mermaid.run({ nodes: nodesToRender });
-      nodesToRender.forEach((node) => {
-        node.dataset.mermaidRendered = "true";
-      });
+      let renderIndex = 0;
+      for (const node of nodesToRender) {
+        const source = node.textContent ?? "";
+        if (!source.trim()) continue;
+        const renderId = `mermaid-${Date.now()}-${renderIndex++}`;
+        try {
+          const { svg, bindFunctions } = await mermaid.render(
+            renderId,
+            source.trim(),
+          );
+          node.innerHTML = svg;
+          if (typeof bindFunctions === "function") {
+            bindFunctions(node);
+          }
+          node.dataset.mermaidRendered = "true";
+        } catch {
+          node.dataset.mermaidError = "true";
+        }
+      }
     }
 
     function initMediaViewer() {
@@ -456,12 +516,27 @@ const { Content } = await render(entry);
 
     async function handleContentReady() {
       updateNoteLinks();
+      syncEmbedFrames();
       initShareButtons();
       try {
         await renderMermaidDiagrams();
       } catch {}
       initMediaViewer();
     }
+
+    const themeObserver = new MutationObserver(() => {
+      syncEmbedFrames();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", () => {
+        syncEmbedFrames();
+      });
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => {

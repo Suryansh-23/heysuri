@@ -31,6 +31,17 @@ const truncateText = (value = "", max = 140) => {
   return `${value.slice(0, max - 3).trimEnd()}...`;
 };
 
+const toTitleCase = (value = "") =>
+  value
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((word) =>
+      word ? `${word[0].toUpperCase()}${word.slice(1).toLowerCase()}` : "",
+    )
+    .join(" ");
+
 const parseAttributes = (tag) => {
   const attrs = {};
   const attrRegex = /([\w:-]+)\s*=\s*(['"])(.*?)\2/g;
@@ -187,6 +198,30 @@ const deriveTitleFromUrl = (url) => {
       return "X post";
     }
 
+    if (host === "github.com" && segments.length >= 2) {
+      return `GitHub — ${segments[0]}/${segments[1]}`;
+    }
+
+    if (host === "dune.com") {
+      if (segments[0] === "queries" && segments[1]) {
+        return `Dune Query #${segments[1]}`;
+      }
+      if (segments[0] === "embeds" && segments[1]) {
+        return `Dune Embed #${segments[1]}`;
+      }
+    }
+
+    if (host.endsWith("cs.wisc.edu")) {
+      const last = segments[segments.length - 1];
+      if (last) {
+        const cleaned = last.replace(/\.[a-z0-9]+$/i, "");
+        const title = toTitleCase(cleaned);
+        if (title) {
+          return `${title} (PDF)`;
+        }
+      }
+    }
+
     return null;
   } catch {
     return null;
@@ -257,7 +292,37 @@ const getNodeText = (node) => {
   return "";
 };
 
-const isExternalLink = (href) => /^https?:\/\//i.test(href);
+const normalizeHref = (href) =>
+  typeof href === "string" ? href.trim() : "";
+
+const isExternalLink = (href) => /^https?:\/\//i.test(normalizeHref(href));
+
+const isEmbedLink = (href) => {
+  try {
+    const url = new URL(normalizeHref(href));
+    return (
+      /\/embeds?\//i.test(url.pathname) ||
+      url.pathname.includes("/embed") ||
+      url.searchParams.has("embed")
+    );
+  } catch {
+    return false;
+  }
+};
+
+const getEmbedThemeParam = (href) => {
+  try {
+    const url = new URL(normalizeHref(href));
+    if (url.searchParams.has("darkMode")) return "darkMode";
+    if (url.searchParams.has("theme")) return "theme";
+    if (url.hostname.replace(/^www\./, "") === "dune.com") {
+      if (/\/embeds?\//i.test(url.pathname)) return "darkMode";
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
 
 const isBareLinkText = (text, href) => {
   if (!text) return false;
@@ -292,14 +357,59 @@ const ensureClassName = (value) => {
   return [value];
 };
 
+const getMeaningfulChildren = (node) => {
+  if (!Array.isArray(node?.children)) return [];
+  return node.children.filter(
+    (child) =>
+      child.type !== "text" || (child.value || "").trim().length > 0,
+  );
+};
+
+const looksLikePseudocode = (node) => {
+  if (!node || node.type !== "element" || node.tagName !== "pre") return false;
+  const props = node.properties || {};
+  const language = props["data-language"] || props.dataLanguage;
+  if (language !== "text") return false;
+  const text = normalizeText(getNodeText(node));
+  if (!text) return false;
+  return (
+    /\bAlgorithm\b/i.test(text) ||
+    /\bInput:\b/i.test(text) ||
+    /\bOutput:\b/i.test(text)
+  );
+};
+
 export default function rehypeLinkMentions() {
   return async (tree) => {
     const candidates = [];
+    const embedCandidates = [];
 
     visit(tree, (node) => {
+      if (looksLikePseudocode(node)) {
+        const className = ensureClassName(node.properties?.className);
+        node.properties = {
+          ...node.properties,
+          className: [...className, "pseudocode-block"],
+        };
+      }
+
+      if (node.type === "element" && node.tagName === "p") {
+        const children = getMeaningfulChildren(node);
+        if (children.length === 1) {
+          const child = children[0];
+          if (child.type === "element" && child.tagName === "a") {
+            const href = child.properties?.href;
+            if (href && isExternalLink(href) && isEmbedLink(href)) {
+              embedCandidates.push({ node, href });
+            }
+          }
+        }
+      }
+
       if (node.type !== "element" || node.tagName !== "a") return;
       const href = node.properties?.href;
       if (!href || !isExternalLink(href)) return;
+      if (isEmbedLink(href)) return;
       if (node.properties?.["data-link-mention"] === "true") return;
 
       const text = getNodeText(node);
@@ -308,85 +418,154 @@ export default function rehypeLinkMentions() {
       candidates.push({ node, href, fallbackText: text });
     });
 
-    if (candidates.length === 0) return;
+    if (candidates.length > 0) {
+      const metadataList = await Promise.all(
+        candidates.map(async ({ href, fallbackText }) => {
+          const metadata = await getMetadata(href);
+          return {
+            href,
+            fallbackText,
+            metadata,
+          };
+        }),
+      );
 
-    const metadataList = await Promise.all(
-      candidates.map(async ({ href, fallbackText }) => {
-        const metadata = await getMetadata(href);
-        return {
-          href,
-          fallbackText,
-          metadata,
+      metadataList.forEach(({ href, fallbackText, metadata }, index) => {
+        const target = candidates[index]?.node;
+        if (!target) return;
+
+        const metaTitle = metadata?.title?.trim() || null;
+        const derivedTitle =
+          metadata?.derivedTitle || deriveTitleFromUrl(href) || null;
+        const oEmbedTitle = metadata?.oEmbedTitle || null;
+        const isTwitterLink = isTwitterUrl(href);
+        const cleanedMetaTitle =
+          metaTitle && !looksLikeUrlTitle(metaTitle) ? metaTitle : null;
+        const usableMetaTitle =
+          isTwitterLink && cleanedMetaTitle && isGenericTwitterTitle(metaTitle)
+            ? null
+            : cleanedMetaTitle;
+        const twitterTitle =
+          oEmbedTitle || derivedTitle || usableMetaTitle || "X post";
+        const title = isTwitterLink
+          ? twitterTitle
+          : usableMetaTitle ||
+            oEmbedTitle ||
+            derivedTitle ||
+            fallbackText ||
+            href.replace(/^https?:\/\//i, "");
+        const hostLabel = metadata?.hostLabel || getHostLabel(href);
+
+        const className = ensureClassName(target.properties?.className);
+        target.properties = {
+          ...target.properties,
+          className: [...className, "link-mention"],
+          "data-link-mention": "true",
         };
-      }),
-    );
 
-    metadataList.forEach(({ href, fallbackText, metadata }, index) => {
-      const target = candidates[index]?.node;
-      if (!target) return;
-
-      const metaTitle = metadata?.title?.trim() || null;
-      const derivedTitle =
-        metadata?.derivedTitle || deriveTitleFromUrl(href) || null;
-      const oEmbedTitle = metadata?.oEmbedTitle || null;
-      const isTwitterLink = isTwitterUrl(href);
-      const cleanedMetaTitle =
-        metaTitle && !looksLikeUrlTitle(metaTitle) ? metaTitle : null;
-      const usableMetaTitle =
-        isTwitterLink && cleanedMetaTitle && isGenericTwitterTitle(metaTitle)
-          ? null
-          : cleanedMetaTitle;
-      const twitterTitle =
-        oEmbedTitle || derivedTitle || usableMetaTitle || "X post";
-      const title = isTwitterLink
-        ? twitterTitle
-        : usableMetaTitle ||
-          oEmbedTitle ||
-          derivedTitle ||
-          fallbackText ||
-          href.replace(/^https?:\/\//i, "");
-      const hostLabel = metadata?.hostLabel || getHostLabel(href);
-
-      const className = ensureClassName(target.properties?.className);
-      target.properties = {
-        ...target.properties,
-        className: [...className, "link-mention"],
-        "data-link-mention": "true",
-      };
-
-      const iconNode = {
-        type: "element",
-        tagName: "span",
-        properties: {
-          className: ["link-mention__icon"],
-          "data-host": hostLabel,
-          "data-has-icon": metadata?.icon ? "true" : "false",
-        },
-        children: metadata?.icon
-          ? [
-              {
-                type: "element",
-                tagName: "img",
-                properties: {
-                  src: metadata.icon,
-                  alt: "",
-                  loading: "lazy",
-                  decoding: "async",
+        const iconNode = {
+          type: "element",
+          tagName: "span",
+          properties: {
+            className: ["link-mention__icon"],
+            "data-host": hostLabel,
+            "data-has-icon": metadata?.icon ? "true" : "false",
+          },
+          children: metadata?.icon
+            ? [
+                {
+                  type: "element",
+                  tagName: "img",
+                  properties: {
+                    src: metadata.icon,
+                    alt: "",
+                    loading: "lazy",
+                    decoding: "async",
+                  },
+                  children: [],
                 },
-                children: [],
+              ]
+            : [],
+        };
+
+        const titleNode = {
+          type: "element",
+          tagName: "span",
+          properties: { className: ["link-mention__title"] },
+          children: [{ type: "text", value: title }],
+        };
+
+        target.children = [iconNode, titleNode];
+      });
+    }
+
+    embedCandidates.forEach(({ node, href }) => {
+      let hostLabel = "EM";
+      let hostName = href;
+      try {
+        const parsed = new URL(href);
+        hostName = parsed.hostname.replace(/^www\./, "");
+        hostLabel = hostName.slice(0, 2).toUpperCase();
+      } catch {}
+
+      const themeParam = getEmbedThemeParam(href);
+      const properties = {
+        className: ["embed-frame"],
+        "data-embed-url": href,
+        "data-embed-host": hostName,
+      };
+      if (themeParam) {
+        properties["data-embed-theme-param"] = themeParam;
+      }
+
+      node.tagName = "div";
+      node.properties = properties;
+      node.children = [
+        {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["embed-frame__shell"] },
+          children: [
+            {
+              type: "element",
+              tagName: "iframe",
+              properties: {
+                className: ["embed-frame__iframe"],
+                src: href,
+                title: `Embed from ${hostName}`,
+                loading: "lazy",
+                referrerpolicy: "no-referrer",
+                allowfullscreen: true,
               },
-            ]
-          : [],
-      };
-
-      const titleNode = {
-        type: "element",
-        tagName: "span",
-        properties: { className: ["link-mention__title"] },
-        children: [{ type: "text", value: title }],
-      };
-
-      target.children = [iconNode, titleNode];
+              children: [],
+            },
+          ],
+        },
+        {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["embed-frame__meta"] },
+          children: [
+            {
+              type: "element",
+              tagName: "span",
+              properties: { className: ["embed-frame__source"] },
+              children: [{ type: "text", value: hostLabel }],
+            },
+            {
+              type: "element",
+              tagName: "a",
+              properties: {
+                className: ["embed-frame__link"],
+                href,
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+              children: [{ type: "text", value: `Open ${hostName}` }],
+            },
+          ],
+        },
+      ];
     });
   };
 }
