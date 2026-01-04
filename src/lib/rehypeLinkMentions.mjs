@@ -365,18 +365,219 @@ const getMeaningfulChildren = (node) => {
   );
 };
 
+const PSEUDOCODE_LANGUAGES = new Set(["pseudocode", "algorithm", "algo"]);
+
+const extractCodeLines = (preNode) => {
+  const codeNode = Array.isArray(preNode.children)
+    ? preNode.children.find(
+        (child) => child.type === "element" && child.tagName === "code",
+      )
+    : null;
+  if (!codeNode) return [];
+
+  const lineNodes = Array.isArray(codeNode.children)
+    ? codeNode.children.filter((child) => {
+        if (child.type !== "element" || child.tagName !== "span") return false;
+        const className = ensureClassName(child.properties?.className);
+        return className.includes("line");
+      })
+    : [];
+
+  const lines = lineNodes.length
+    ? lineNodes.map((lineNode) =>
+        getNodeText(lineNode)
+          .replace(/\u00a0/g, " ")
+          .replace(/\s+$/g, ""),
+      )
+    : getNodeText(codeNode)
+        .split(/\r?\n/)
+        .map((line) => line.replace(/\u00a0/g, " ").replace(/\s+$/g, ""));
+
+  while (lines.length && lines[lines.length - 1].trim() === "") {
+    lines.pop();
+  }
+
+  return lines;
+};
+
 const looksLikePseudocode = (node) => {
+  const lines = extractCodeLines(node);
+  const firstLine = lines.find((line) => line.trim().length > 0);
+  if (!firstLine) return false;
+  if (/^Algorithm\b/i.test(firstLine.trim())) return true;
+  return lines.some((line) => {
+    const trimmed = line.trim();
+    return /^Input\s*:/i.test(trimmed) || /^Output\s*:/i.test(trimmed);
+  });
+};
+
+const isPseudocodeLanguage = (node) => {
   if (!node || node.type !== "element" || node.tagName !== "pre") return false;
   const props = node.properties || {};
   const language = props["data-language"] || props.dataLanguage;
-  if (language !== "text") return false;
-  const text = normalizeText(getNodeText(node));
-  if (!text) return false;
-  return (
-    /\bAlgorithm\b/i.test(text) ||
-    /\bInput:\b/i.test(text) ||
-    /\bOutput:\b/i.test(text)
-  );
+  if (!language) return false;
+  const normalized = String(language).toLowerCase();
+  if (PSEUDOCODE_LANGUAGES.has(normalized)) return true;
+  if (normalized === "plaintext" || normalized === "text") {
+    return looksLikePseudocode(node);
+  }
+  return false;
+};
+
+const parsePseudocodeLines = (lines) => {
+  let title = null;
+  const io = [];
+  const steps = [];
+
+  lines.forEach((rawLine) => {
+    const trimmed = rawLine.trim();
+    if (!trimmed) {
+      steps.push({ kind: "spacer" });
+      return;
+    }
+
+    if (!title && /^Algorithm\b/i.test(trimmed)) {
+      title = trimmed;
+      return;
+    }
+
+    const ioMatch = trimmed.match(/^(Input|Output)\s*:\s*(.*)$/i);
+    if (ioMatch) {
+      io.push({ label: ioMatch[1], value: ioMatch[2] });
+      return;
+    }
+
+    const stepMatch = rawLine.match(/^(\d+)\s*:(.*)$/);
+    if (stepMatch) {
+      steps.push({
+        kind: "step",
+        number: stepMatch[1],
+        text: stepMatch[2].replace(/\s+$/g, ""),
+      });
+      return;
+    }
+
+    steps.push({ kind: "line", text: rawLine });
+  });
+
+  if (!title) {
+    const firstLineIndex = steps.findIndex(
+      (step) => step.kind === "line" && step.text.trim().length > 0,
+    );
+    if (firstLineIndex >= 0) {
+      title = steps[firstLineIndex].text.trim();
+      steps.splice(firstLineIndex, 1);
+    }
+  }
+
+  if (!title && io.length === 0 && steps.length === 0) return null;
+
+  while (steps.length && steps[0].kind === "spacer") {
+    steps.shift();
+  }
+  while (steps.length && steps[steps.length - 1].kind === "spacer") {
+    steps.pop();
+  }
+
+  return { title, io, steps };
+};
+
+const buildAlgorithmChildren = (parsed) => {
+  const createText = (value) => ({ type: "text", value });
+  const createElement = (tagName, properties, children = []) => ({
+    type: "element",
+    tagName,
+    properties,
+    children,
+  });
+
+  const children = [];
+
+  if (parsed.title) {
+    children.push(
+      createElement(
+        "div",
+        { className: ["algorithm-title"] },
+        [createText(parsed.title)],
+      ),
+    );
+  }
+
+  if (parsed.io.length) {
+    children.push(
+      createElement(
+        "div",
+        { className: ["algorithm-io"] },
+        parsed.io.map((entry) =>
+          createElement(
+            "div",
+            { className: ["algorithm-io-row"] },
+            [
+              createElement(
+                "span",
+                { className: ["algorithm-label"] },
+                [createText(`${entry.label}:`)],
+              ),
+              entry.value
+                ? createElement(
+                    "span",
+                    { className: ["algorithm-value"] },
+                    [createText(entry.value)],
+                  )
+                : createElement("span", { className: ["algorithm-value"] }, []),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (parsed.steps.length) {
+    children.push(
+      createElement(
+        "div",
+        { className: ["algorithm-steps"] },
+        parsed.steps.map((step) => {
+          if (step.kind === "spacer") {
+            return createElement("div", { className: ["algorithm-spacer"] }, []);
+          }
+
+          if (step.kind === "step") {
+            return createElement(
+              "div",
+              { className: ["algorithm-step"] },
+              [
+                createElement(
+                  "span",
+                  { className: ["algorithm-step-number"] },
+                  [createText(`${step.number}.`)],
+                ),
+                createElement(
+                  "span",
+                  { className: ["algorithm-step-text"] },
+                  [createText(step.text)],
+                ),
+              ],
+            );
+          }
+
+          return createElement(
+            "div",
+            { className: ["algorithm-line"] },
+            [
+              createElement(
+                "span",
+                { className: ["algorithm-step-text"] },
+                [createText(step.text)],
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  return children;
 };
 
 export default function rehypeLinkMentions() {
@@ -385,12 +586,14 @@ export default function rehypeLinkMentions() {
     const embedCandidates = [];
 
     visit(tree, (node) => {
-      if (looksLikePseudocode(node)) {
-        const className = ensureClassName(node.properties?.className);
-        node.properties = {
-          ...node.properties,
-          className: [...className, "pseudocode-block"],
-        };
+      if (isPseudocodeLanguage(node)) {
+        const lines = extractCodeLines(node);
+        const parsed = parsePseudocodeLines(lines);
+        if (parsed) {
+          node.tagName = "div";
+          node.properties = { className: ["algorithm-block"] };
+          node.children = buildAlgorithmChildren(parsed);
+        }
       }
 
       if (node.type === "element" && node.tagName === "p") {

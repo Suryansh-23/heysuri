@@ -82,14 +82,10 @@ So “find the block for timestamp `t*`” becomes: find the smallest `b` such t
 
 Here’s the “block-by-timestamp” interpolation search in proper CS notation (with the reality that each `TS(b)` requires an RPC call):
 
-```text
+```pseudocode
 Algorithm InterpolationSearchTimestamp
-Input:
-  t*          : target timestamp
-  b_min, b_max: inclusive block bounds (from checkpoints / earliest / latest)
-  TS(b)       : function that returns block b's timestamp (RPC)
-Output:
-  b_hat       : block number closest to t*
+Input: t*, b_min, b_max, TS(b) // TS(b) returns block timestamp (RPC)
+Output: b_hat // block number closest to t*
 
 1:  L ← b_min
 2:  R ← b_max
@@ -201,9 +197,10 @@ Still, the ideas are too spicy to ignore — so i implemented them and benchmark
 
 #### SIP pseudocode (rough, adapted for block timestamps)
 
-```text
+```pseudocode
 Algorithm SIPTimestamp (Slope-Reuse Interpolation)
 Input: t*, b_min, b_max
+Output: finalizeClosest(t*)
 1:  L ← b_min ; R ← b_max
 2:  tL ← TS(L) ; tR ← TS(R)
 3:  slope ← (R - L) / (tR - tL)         // computed once (reused)
@@ -226,9 +223,10 @@ Input: t*, b_min, b_max
 The paper’s TIP uses a 3-point interpolation method (Jarratt & Nudds + a cheaper first step).
 For blocks, the intuition is: “if a line is too naive, fit a curve using three samples and jump closer”.
 
-```text
+```pseudocode
 Algorithm TIPTimestamp (Three-Point Interpolation)
 Input: t*, b_min, b_max
+Output: finalizeClosest(t*)
 1:  L ← b_min ; R ← b_max ; M ← ⌊(L+R)/2⌋
 2:  tL ← TS(L) ; tM ← TS(M) ; tR ← TS(R)
 3:  pos ← threePointEstimate(t*, (L,tL), (M,tM), (R,tR))
@@ -317,9 +315,10 @@ It’s basically binary search where the “mid” probe is replaced by an inter
 
 #### Pseudocode (high level)
 
-```text
+```pseudocode
 Algorithm InterpolatedBinarySearchTimestamp
 Input: t*, b_min, b_max
+Output: finalizeClosest(t*)
 1:  L ← b_min ; R ← b_max
 2:  while L ≤ R do
 3:      tL ← TS(L) ; tR ← TS(R)
