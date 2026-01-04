@@ -8,9 +8,13 @@ const post = entry as CollectionEntry<"notes">;
 const postTitle = post.data.title || SITE.title;
 const postDescription = post.data.description || SITE.description;
 const canonicalUrl = Astro.url;
-const ogImage = new URL(`og/notes/${post.id}.png`, Astro.site);
+const ogImage = new URL(`og/notes/${post.id}.png/`, Astro.site);
 const ogWidth = 1200;
 const ogHeight = 630;
+const ogLocale = SITE.locale.replace(/-/g, "_");
+const facebookAppId =
+  import.meta.env.FB_APP_ID ?? import.meta.env.PUBLIC_FB_APP_ID ?? null;
+const authorProfile = SOCIAL_LINKS.twitter?.href ?? SITE.href;
 const twitterHandle = (() => {
   const twitterUrl = SOCIAL_LINKS.twitter?.href;
   if (!twitterUrl) return null;
@@ -35,15 +39,17 @@ const publishedTime = post.data.publicationDate.toISOString();
 <meta property="og:url" content={canonicalUrl} />
 <meta property="og:site_name" content={SITE.title} />
 <meta property="og:image" content={ogImage} />
+<meta property="og:image:url" content={ogImage} />
 <meta property="og:image:secure_url" content={ogImage} />
 <meta property="og:image:alt" content={postTitle} />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content={`${ogWidth}`} />
 <meta property="og:image:height" content={`${ogHeight}`} />
 <meta property="og:type" content="article" />
-<meta property="og:locale" content={SITE.locale} />
+<meta property="og:locale" content={ogLocale} />
+{facebookAppId && <meta property="fb:app_id" content={facebookAppId} />}
 <meta property="article:published_time" content={publishedTime} />
-<meta property="article:author" content={SITE.author} />
+<meta property="article:author" content={authorProfile} />
 
 <meta name="twitter:title" content={postTitle} />
 <meta name="twitter:description" content={postDescription} />
