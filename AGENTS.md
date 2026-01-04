@@ -4,7 +4,6 @@
 
 - Astro-based personal site/blog with Tailwind CSS and content collections for notes, projects, and work.
 - Routes live in `src/pages` with shared layout and components; content is Markdown under `src/content`.
-- Build includes a custom IPFS post-processing step that rewrites asset paths and injects a navigation fixer.
 
 ## Key directories
 
@@ -42,9 +41,8 @@
 
 ## Build/Deploy
 
-- `astro.config.mjs` sets `site` to an IPFS URL, `trailingSlash: "always"`, and `build.format: "directory"`.
+- `astro.config.mjs` sets `site` (via `SITE_URL` or fallback), `trailingSlash: "always"`, and `build.format: "directory"`.
 - Vite build outputs hashed asset filenames.
-- Custom `ipfsIntegration` (build hook) rewrites asset paths and injects a navigation script into each `dist/**/index.html`.
 
 ## Data and schema
 
@@ -76,4 +74,3 @@
 
 - With `trailingSlash: "always"`, internal links should include a trailing `/` (including RSS item links) to avoid 404s.
 - `src/components/Favicons.astro` expects favicon files under `public/` that are not tracked.
-- IPFS post-processing mutates built HTML in `dist/`; be careful if you depend on exact output hashes.
