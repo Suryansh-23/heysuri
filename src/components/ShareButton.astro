@@ -1,0 +1,38 @@
+---
+const {
+  label = "Share",
+  ariaLabel = "Copy link to clipboard",
+  class: className = "",
+} = Astro.props;
+
+const classes = ["share-button", className].filter(Boolean).join(" ");
+---
+
+<button
+  type="button"
+  class={classes}
+  data-share-button
+  data-share-state="idle"
+  aria-label={ariaLabel}
+>
+  <span class="share-button__icon" aria-hidden="true">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+    >
+      <path
+        fill="currentColor"
+        d="M13 6.5V4l7 4.5L13 13v-2.5H9c-2.2 0-4 1.8-4 4V19H3v-4.5C3 10.9 5.9 8 9.5 8H13z"
+      />
+    </svg>
+  </span>
+  <span class="share-button__label">{label}</span>
+  <span
+    class="share-button__status"
+    data-share-status
+    role="status"
+    aria-live="polite"
+  ></span>
+</button>

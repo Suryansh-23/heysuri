@@ -161,14 +161,12 @@ const fetchTwitterOEmbed = async (url) => {
     const title = authorLabel ? `${authorLabel} — ${tweetText}` : tweetText;
     return {
       title: truncateText(title, 140),
-      authorLabel,
     };
   }
 
   if (authorLabel) {
     return {
       title: `X post by ${authorLabel}`,
-      authorLabel,
     };
   }
 

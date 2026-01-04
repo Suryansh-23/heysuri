@@ -134,3 +134,74 @@ body .link-mention__title {
   --prose-link-color: var(--color-dark-link);
   --prose-link-underline-color: var(--color-dark-link);
 }
+
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  position: relative;
+  cursor: pointer;
+}
+
+.share-button:hover {
+  border-color: var(--color-muted-text);
+  transform: translateY(-1px);
+}
+
+.share-button__icon {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+}
+
+.share-button__status {
+  position: absolute;
+  right: 0;
+  top: -1.5rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-muted-text);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.share-button[data-share-state="copied"] .share-button__status,
+.share-button[data-share-state="error"] .share-button__status {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dark .share-button {
+  border-color: var(--color-dark-border);
+  background: var(--color-dark-surface);
+  color: var(--color-dark-ink);
+}
+
+.dark .share-button:hover {
+  border-color: var(--color-dark-muted-text);
+}
+
+.dark .share-button__status {
+  border-color: var(--color-dark-border);
+  background: var(--color-dark-bg);
+  color: var(--color-dark-muted-text);
+}

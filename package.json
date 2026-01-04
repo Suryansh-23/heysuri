@@ -14,12 +14,15 @@
     "@astrojs/rss": "^4.0.12",
     "@astrojs/sitemap": "^3.4.1",
     "@tailwindcss/vite": "^4.1.11",
+    "@vercel/og": "^0.8.6",
     "astro": "^5.12.3",
     "mermaid": "^11.12.2",
+    "react": "^19.2.3",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "@types/react": "^19.2.7",
     "prettier": "^3.6.2",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.14"
