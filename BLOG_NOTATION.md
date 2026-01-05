@@ -1,13 +1,13 @@
 # Blog Notation Guide
 
-This guide documents the supported notation and components for notes/blogs in
-`src/content/notes/`. Keep syntax lightweight and consistent so styling stays
-automatic.
+This guide documents the supported notation and components for writing posts
+in `src/content/notes/` (the content folder keeps the legacy name). Keep syntax
+lightweight and consistent so styling stays automatic.
 
-## 1) Frontmatter (notes)
+## 1) Frontmatter (writing)
 
-Notes live in `src/content/notes/` as `.md` or `.mdx` files and require the
-schema below.
+Writing posts live in `src/content/notes/` as `.md` or `.mdx` files and require
+the schema below.
 
 ```yaml
 ---
@@ -83,7 +83,7 @@ Inline images:
 ![Alt text](./diagram.png)
 ```
 
-Images in notes are clickable for a larger preview.
+Images in writing posts are clickable for a larger preview.
 
 ## 7) Embeds (iframes)
 
@@ -112,7 +112,7 @@ If you want a normal link, wrap it with custom text:
 [Etherscan docs](https://docs.etherscan.io/api-reference/endpoint/getblocknobytime)
 ```
 
-External links open in a new tab automatically for notes/projects pages.
+External links open in a new tab automatically for writing/projects pages.
 
 ## 9) Tables
 

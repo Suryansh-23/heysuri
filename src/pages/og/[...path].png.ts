@@ -34,10 +34,17 @@ const STATIC_PAGES = [
   },
   {
     path: "notes",
-    title: "Notes",
-    description: "Notes and writing.",
-    type: "Notes",
-    slug: "notes",
+    title: "Writing",
+    description: "Essays, experiments, and technical writing.",
+    type: "Writing",
+    slug: "writing",
+  },
+  {
+    path: "writing",
+    title: "Writing",
+    description: "Essays, experiments, and technical writing.",
+    type: "Writing",
+    slug: "writing",
   },
   {
     path: "projects",
@@ -103,16 +110,28 @@ export async function getStaticPaths() {
       params: { path: page.path },
       props: page,
     })),
-    ...notes.map((entry) => ({
-      params: { path: `notes/${entry.id}` },
-      props: {
-        title: entry.data.title,
-        description: entry.data.description,
-        type: "Note",
-        slug: entry.id,
-        date: entry.data.publicationDate,
+    ...notes.flatMap((entry) => [
+      {
+        params: { path: `notes/${entry.id}` },
+        props: {
+          title: entry.data.title,
+          description: entry.data.description,
+          type: "Writing",
+          slug: entry.id,
+          date: entry.data.publicationDate,
+        },
       },
-    })),
+      {
+        params: { path: `writing/${entry.id}` },
+        props: {
+          title: entry.data.title,
+          description: entry.data.description,
+          type: "Writing",
+          slug: entry.id,
+          date: entry.data.publicationDate,
+        },
+      },
+    ]),
   ];
 }
 

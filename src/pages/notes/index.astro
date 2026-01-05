@@ -1,11 +1,4 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-
-import Posts from "@/components/Posts.astro";
-import SeoPage from "@/components/SeoPage.astro";
+export const prerender = true;
+return Astro.redirect("/writing/");
 ---
-
-<BaseLayout>
-  <SeoPage slot="head" title="Notes" />
-  <Posts />
-</BaseLayout>

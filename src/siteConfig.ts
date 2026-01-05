@@ -15,8 +15,8 @@ export const SITE: SiteConfiguration = {
 
 export const NAV_LINKS: NavigationLinks = {
   notes: {
-    path: "/notes/",
-    label: "Notes",
+    path: "/writing/",
+    label: "Writing",
   },
   projects: {
     path: "/projects/",

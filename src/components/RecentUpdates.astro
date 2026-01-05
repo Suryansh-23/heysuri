@@ -18,7 +18,7 @@ type ProjectItem = BaseItem & {
 
 type ToastItem = BaseItem & {
   date: Date | null;
-  kind: "Note" | "Project";
+  kind: "Writing" | "Project";
 };
 
 const MAX_ITEMS = 3;
@@ -37,7 +37,7 @@ const projects = await getCollection("projects");
 const noteItems: NoteItem[] = notes.map((entry) => ({
   title: entry.data.title,
   description: entry.data.description,
-  href: `/notes/${entry.id}/`,
+  href: `/writing/${entry.id}/`,
   date: entry.data.publicationDate,
   isRecent: entry.data.publicationDate >= cutoff,
 }));
@@ -81,7 +81,7 @@ const projectCandidates =
 const recentProjects = selectRecentItems(projectCandidates);
 
 const toastItems: ToastItem[] = [
-  ...recentNotes.map((item) => ({ ...item, kind: "Note" as const })),
+  ...recentNotes.map((item) => ({ ...item, kind: "Writing" as const })),
   ...recentProjects.map((item) => ({ ...item, kind: "Project" as const })),
 ]
   .sort((a, b) => (b.date?.valueOf() ?? 0) - (a.date?.valueOf() ?? 0))
@@ -111,7 +111,7 @@ const hasToasts = toastItems.length > 0;
         {toastItems.map((item, index) => (
           <div
             class={`recent-toast ${
-              item.kind === "Note"
+              item.kind === "Writing"
                 ? "recent-toast--note"
                 : "recent-toast--project"
             }`}

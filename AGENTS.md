@@ -2,13 +2,13 @@
 
 ## Overview
 
-- Astro-based personal site/blog with Tailwind CSS and content collections for notes, projects, and work.
+- Astro-based personal site/blog with Tailwind CSS and content collections for writing (notes collection), projects, and work.
 - Routes live in `src/pages` with shared layout and components; content is Markdown under `src/content`.
 
 ## Key directories
 
 - `src/components`: UI building blocks (navigation, posts, projects, theme toggle, SEO).
-- `src/pages`: route definitions (home, notes, projects, work, side-quests, hello, 404, rss.xml, robots.txt).
+- `src/pages`: route definitions (home, writing, projects, work, side-quests, hello, 404, rss.xml, robots.txt).
 - `src/content`: Markdown content and schemas in `src/content.config.ts`.
 - `src/styles`: global Tailwind and typography styles.
 - `public`: static assets (only `site.webmanifest` is tracked).
@@ -16,7 +16,8 @@
 ## Entry points
 
 - `src/pages/index.astro`: homepage.
-- `src/pages/notes/[...id].astro`: note detail pages.
+- `src/pages/writing/[...id].astro`: writing detail pages.
+- `src/pages/notes/[...id].astro`: legacy redirect to `/writing/:id/`.
 - `src/pages/rss.xml.js` and `src/pages/robots.txt.ts`: API routes.
 - `astro.config.mjs`: site config, integrations, and build hooks.
 
@@ -46,7 +47,7 @@
 
 ## Data and schema
 
-- Collections in `src/content.config.ts`: `notes`, `projects`, `work`.
+- Collections in `src/content.config.ts`: `notes` (writing), `projects`, `work`.
 - `notes` supports optional images via `astro:assets`.
 
 ## Integrations
@@ -81,10 +82,10 @@
 - Mermaid diagrams and images are clickable for a full-screen preview.
 - Update `AGENTS.md` whenever new UI components or content features are added so direction stays current.
 
-## Notes UX features
+## Writing UX features
 
-- Share button copies the current page URL; it appears near the note date and at the end.
-- External links inside notes open in a new tab with `noopener noreferrer`.
+- Share button copies the current page URL; it appears near the writing date and at the end.
+- External links inside writing entries open in a new tab with `noopener noreferrer`.
 - Math rendering uses KaTeX with inline `$...$` and display `$$...$$`.
 
 ## Interactive components

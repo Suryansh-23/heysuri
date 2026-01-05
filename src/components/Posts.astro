@@ -11,13 +11,13 @@ interface Props {
 }
 
 const {
-  emptyMessage = "No notes yet. I'm dealing with dilemma of choice right now.",
+  emptyMessage = "No writing yet. I'm dealing with dilemma of choice right now.",
 } = Astro.props as Props;
 ---
 
 <section class="py-3">
   <h2 class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold">
-    Notes
+    Writing
   </h2>
   {
     posts.length > 0 ? (
