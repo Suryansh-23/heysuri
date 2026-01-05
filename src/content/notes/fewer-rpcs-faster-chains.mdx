@@ -139,7 +139,6 @@ I wanted a Desmos/GeoGebra style way to _feel_ interpolation search, not just re
   features={{ showCompare: false, showWhyFails: false }}
 />
 
-
 ---
 
 #### Benchmarks (hiding TIP/SIP for now)
@@ -250,9 +249,12 @@ Output: finalizeClosest(t*)
   presets={["uniform", "piecewise", "duplicates", "skewed"]}
   defaultPreset="duplicates"
   features={{ showSipControls: true, showWhyFails: true }}
-  defaults={{ slopeInterval: 4, duplicateProbability: 0.18, duplicateLength: 20 }}
+  defaults={{
+    slopeInterval: 4,
+    duplicateProbability: 0.18,
+    duplicateLength: 20,
+  }}
 />
-
 
 ---
 
@@ -356,7 +358,6 @@ Interpolated-binary is the compromise: it tries to jump close when the data is n
   defaults={{ noise: 0.35, duplicateProbability: 0.12 }}
 />
 
-
 #### Benchmarks (why it’s a good middle ground)
 
 For the same 4 chains:
@@ -409,7 +410,7 @@ So the benchmark does:
 
 - query latest block timestamp
 - binary-search for the earliest available block (pruning aware)
-- generate a timestamp plan (even samples + seeded random samples) across **that** interval
+- generate a timestamp plan (even samples + seeded random samples) across that interval
 
 #### 4) Measuring “speed” isn’t enough
 

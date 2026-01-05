@@ -16,6 +16,7 @@ description: "1-2 lines that show up in previews."
 publicationDate: 2026-01-04
 image: ./cover.png # optional hero image (relative to this file)
 imageAlt: "Concise alt text" # required if image is set
+imageCaption: "Short caption shown under the hero image." # optional
 tags:
   - rpc
   - infra

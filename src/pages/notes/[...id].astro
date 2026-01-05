@@ -30,12 +30,17 @@ const { Content } = await render(entry);
   <div>
     {
       entry.data.image && (
-        <Image
-          src={entry.data.image}
-          alt={entry.data.imageAlt || ""}
-          class="mb-12 h-auto w-full"
-          draggable="false"
-        />
+        <>
+          <Image
+            src={entry.data.image}
+            alt={entry.data.imageAlt || ""}
+            class="mb-4 h-auto w-full"
+            draggable="false"
+          />
+          {entry.data.imageCaption && (
+            <p class="note-cover-caption">{entry.data.imageCaption}</p>
+          )}
+        </>
       )
     }
     <h1
@@ -62,6 +67,20 @@ const { Content } = await render(entry);
   </div>
 
   <style>
+    .note-cover-caption {
+      margin: 0 0 3rem;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted-text);
+      text-align: center;
+    }
+
+    :global(.dark) .note-cover-caption {
+      color: var(--color-dark-muted-text);
+    }
+
     .note-content :global(.mermaid) {
       margin: 2rem 0;
       overflow-x: auto;
