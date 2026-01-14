@@ -69,7 +69,7 @@
 
 - Always update and verify **both** light and dark styles for any UI changes (including hover/active/disabled states).
 - Theme is controlled by `.dark`/`.light` on `document.documentElement` (see `src/components/ThemeToggle.astro`); use Tailwind `dark:` utilities when possible.
-- For component-scoped CSS, wrap dark selectors with `:global(.dark)` (e.g., `:global(.dark) .toast { ... }`) to avoid Astro scope leakage.
+- For component-scoped CSS, wrap dark selectors with `:global(.dark)` (e.g., `:global(.dark) .toast { ... }`) to avoid Astro scope leakage.f
 - Prefer theme variables from `src/styles/global.css` and `src/styles/typography.css` (`--color-bg`, `--color-dark-bg`, `--color-muted-text`, `--color-dark-muted-text`, `--color-link`, `--color-dark-link`) over hard-coded colors.
 - Keep UI surfaces solid; avoid transparency except for essential motion/fade effects.
 - Site aesthetic is inkprint/minimal: avoid rounded corners, avoid translucent fills, and use solid borders with `--color-border`/`--color-dark-border`.
@@ -85,7 +85,84 @@
 - Standalone embed URLs (e.g., Dune embeds) auto-render as themed iframes and stay in sync with site theme.
 - Mermaid diagrams and images are clickable for a full-screen preview.
 - Update `AGENTS.md` whenever new UI components or content features are added so direction stays current.
- - Homepage recent toasts should highlight writing only (no project notifications).
+- Homepage recent toasts should highlight writing only (no project notifications).
+
+## Design system & UX
+
+### Visual direction (vibe + inspiration)
+
+- Overall vibe: inkprint / newspaper, minimal, editorial, thoughtful, and tactile.
+- Surfaces feel like paper: solid fills, fine borders, subtle gradients (no glass, no blur, no transparency).
+- Inspiration: print layout grids, book typography, and low-contrast paper stock; modernized with clean spacing and crisp rules.
+- UI should feel calm and deliberate, not app-y or over-animated.
+
+### Typography system
+
+- Primary body: `Newsreader` for long-form content (prose).
+- UI/labels: `IBM Plex Sans Condensed` for caps labels, meta, buttons, and tool UI.
+- Keep headings editorial: heavier weight, tighter leading, strong hierarchy.
+- Avoid mixing in new fonts unless explicitly asked.
+- Example pairing:
+  - Title: Newsreader, bold, tight line-height.
+  - Meta label: IBM Plex Sans Condensed, uppercase, letter spacing.
+
+### Color + theming
+
+- Always ship both light and dark variants together.
+- Use CSS variables from `src/styles/global.css` and `src/styles/typography.css` for consistency.
+- Avoid rounded corners and translucent overlays; prefer solid borders and flat fills.
+- Dark mode should feel like e-ink: low contrast, warm blacks, muted highlights.
+- Light mode should feel like paper: warm off-white backgrounds with muted inks.
+
+### Layout & spacing
+
+- Keep layouts structured and columnar. Use generous white space.
+- Prefer horizontal rules (`border`) for separation instead of cards/shadows.
+- Inline elements should align with text baselines and feel typeset.
+- When highlighting a section (e.g., Toolbox), elevate with spacing + rules, not heavy boxes.
+
+### Motion & interaction
+
+- Minimal motion only: fades, subtle lifts, short durations.
+- Avoid bounce, heavy easing, or elaborate animation stacks.
+- Hover states should be quiet: slight border darkening or subtle underline.
+- For overlays/fullscreen previews: soft fade + small translate; avoid sudden snaps.
+
+### Components & patterns (do/don't)
+
+- Do:
+  - Use bordered blocks for modules that need grouping (thin rules).
+  - Use uppercase labels for metadata with letter spacing.
+- Keep project/writing lists as clean, text-first entries.
+- Keep iconography small, monochrome, and minimal.
+- Favicon uses a minimal “S.” set in the body serif; keep it simple and inkprint-consistent.
+- Don't:
+  - Use rounded pills, shadows, or glass-like layers.
+  - Introduce saturated accent colors unless already in the palette.
+  - Add unnecessary badges/chips unless they serve content hierarchy.
+
+### Tailwind + CSS tips
+
+- Prefer Tailwind utilities for layout + spacing, but define component-specific styling in scoped CSS when needed.
+- Use `:global(.dark)` for dark overrides inside component styles.
+- Prefer `border-[0.5px]` for thin rules to match print aesthetics.
+- Keep line lengths comfortable: align with `.prose` widths.
+
+### Example patterns
+
+- Section header:
+  - `class="text-muted-text dark:text-dark-muted-text text-lg font-bold"`
+- Meta label:
+  - `class="text-[10px] font-semibold uppercase tracking-[0.18em]"`
+- Divider:
+  - `class="border-border dark:border-dark-border border-[0.5px]"`
+
+### UX principles
+
+- Content first: text readability wins over visual decoration.
+- Reduce cognitive load: fewer UI elements, clearer hierarchy.
+- Make interactive elements obvious but not loud.
+- Maintain consistency across pages and components.
 
 ## Writing UX features
 
