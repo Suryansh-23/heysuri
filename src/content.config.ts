@@ -25,6 +25,7 @@ const projects = defineCollection({
       title: z.string(),
       description: z.string(),
       publicationDate: z.date().optional(),
+      rank: z.number().int().optional(),
       href: z.string(),
     }),
 });

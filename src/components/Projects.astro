@@ -2,11 +2,48 @@
 import { getCollection } from "astro:content";
 import ExternalLink from "@/components/ExternalLink.astro";
 
-const projects = await getCollection("projects");
+const projects = (await getCollection("projects")).sort((a, b) => {
+  const rankA = a.data.rank ?? 999;
+  const rankB = b.data.rank ?? 999;
+  if (rankA !== rankB) return rankA - rankB;
+  return a.data.title.localeCompare(b.data.title);
+});
 ---
 
 <section class="py-3">
-  <h2 class="text-muted-text dark:text-dark-muted-text mb-3 text-lg font-bold">
+  <div class="toolbox-panel">
+    <div class="toolbox-header">Toolbox</div>
+    <div class="toolbox-grid">
+      <div class="prose">
+        <h3 class="m-0 text-base">Languages</h3>
+        <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+          JS/TS, Solidity, Go, Rust, Python
+        </p>
+      </div>
+      <div class="prose">
+        <h3 class="m-0 text-base">Frontend</h3>
+        <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+          React, Next.js, Tailwind CSS, Figma
+        </p>
+      </div>
+      <div class="prose">
+        <h3 class="m-0 text-base">Smart contracts & Web3</h3>
+        <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+          Viem, Ethers, Chainlink, EigenLayer
+        </p>
+      </div>
+      <div class="prose">
+        <h3 class="m-0 text-base">Data & infra</h3>
+        <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
+          TheGraph/Substreams, RabbitMQ
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <h2
+    class="text-muted-text dark:text-dark-muted-text mt-10 mb-3 text-lg font-bold"
+  >
     Projects
   </h2>
   <div class="grid list-none gap-4 p-0">
@@ -23,36 +60,41 @@ const projects = await getCollection("projects");
       ))
     }
   </div>
-
-  <h2
-    class="text-muted-text dark:text-dark-muted-text mt-6 mb-3 text-lg font-bold"
-  >
-    Toolbox
-  </h2>
-  <div class="grid gap-4 sm:grid-cols-2">
-    <div class="prose">
-      <h3 class="m-0 text-base">Languages</h3>
-      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
-        JS/TS, Solidity, Go, Rust, Python
-      </p>
-    </div>
-    <div class="prose">
-      <h3 class="m-0 text-base">Frontend</h3>
-      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
-        React, Next.js, Tailwind CSS
-      </p>
-    </div>
-    <div class="prose">
-      <h3 class="m-0 text-base">Smart contracts & Web3</h3>
-      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
-        Viem, Ethers, Chainlink, EigenLayer
-      </p>
-    </div>
-    <div class="prose">
-      <h3 class="m-0 text-base">Data & infra</h3>
-      <p class="text-muted-text dark:text-dark-muted-text m-0 text-sm">
-        TheGraph/Substreams, RabbitMQ
-      </p>
-    </div>
-  </div>
 </section>
+
+<style>
+  .toolbox-panel {
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: clamp(1rem, 2vw, 1.5rem) 0;
+    background: transparent;
+  }
+
+  :global(.dark) .toolbox-panel {
+    border-color: var(--color-dark-border);
+  }
+
+  .toolbox-header {
+    font-family: var(--font-sans);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    color: var(--color-muted-text);
+    margin-bottom: 0.85rem;
+  }
+
+  :global(.dark) .toolbox-header {
+    color: var(--color-dark-muted-text);
+  }
+
+  .toolbox-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 40rem) {
+    .toolbox-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

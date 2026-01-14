@@ -49,6 +49,9 @@
 
 - Collections in `src/content.config.ts`: `notes` (writing), `projects`, `work`.
 - `notes` supports optional images via `astro:assets`.
+- Resume-based project references live in `Suryansh_Chauhan_Resume.pdf` (use for cross-checking project names/blurb only; avoid copying personal details).
+- GitHub repo descriptions are the primary source for project blurbs and links; see `https://github.com/Suryansh-23?tab=repositories&type=source` for canonical repo names.
+- Projects support an optional `rank` field in frontmatter; lower numbers float to the top of `/projects/` for wow-factor ordering.
 
 ## Integrations
 
@@ -60,6 +63,7 @@
 - Tailwind utility classes with shared `.prose` styles from `src/styles/typography.css`.
 - Theme toggling uses localStorage key `currentTheme`, defaulting to light.
 - Authoring notation lives in `BLOG_NOTATION.md`; keep it up to date when new content features land.
+- Projects page keeps the Toolbox panel above the project list in a bordered, inkprint-style block so it doesn't get visually buried.
 
 ## Theming
 
@@ -81,6 +85,7 @@
 - Standalone embed URLs (e.g., Dune embeds) auto-render as themed iframes and stay in sync with site theme.
 - Mermaid diagrams and images are clickable for a full-screen preview.
 - Update `AGENTS.md` whenever new UI components or content features are added so direction stays current.
+ - Homepage recent toasts should highlight writing only (no project notifications).
 
 ## Writing UX features
 

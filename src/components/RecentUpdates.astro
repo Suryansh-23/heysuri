@@ -12,13 +12,9 @@ type NoteItem = BaseItem & {
   date: Date;
 };
 
-type ProjectItem = BaseItem & {
-  date: Date | null;
-};
-
 type ToastItem = BaseItem & {
   date: Date | null;
-  kind: "Writing" | "Project";
+  kind: "Writing";
 };
 
 const MAX_ITEMS = 3;
@@ -32,7 +28,6 @@ const cutoff = new Date(now);
 cutoff.setDate(now.getDate() - RECENT_WINDOW_DAYS);
 
 const notes = await getCollection("notes");
-const projects = await getCollection("projects");
 
 const noteItems: NoteItem[] = notes.map((entry) => ({
   title: entry.data.title,
@@ -41,17 +36,6 @@ const noteItems: NoteItem[] = notes.map((entry) => ({
   date: entry.data.publicationDate,
   isRecent: entry.data.publicationDate >= cutoff,
 }));
-
-const projectItems: ProjectItem[] = projects.map((entry) => {
-  const date = entry.data.publicationDate ?? null;
-  return {
-    title: entry.data.title,
-    description: entry.data.description,
-    href: entry.data.href,
-    date,
-    isRecent: date ? date >= cutoff : false,
-  };
-});
 
 const selectRecentItems = <T extends { date: Date | null }>(
   items: T[],
@@ -73,16 +57,8 @@ const selectRecentItems = <T extends { date: Date | null }>(
 };
 
 const recentNotes = selectRecentItems(noteItems);
-const datedProjects = projectItems.filter(
-  (project) => project.date instanceof Date,
-);
-const projectCandidates =
-  datedProjects.length > 0 ? datedProjects : projectItems;
-const recentProjects = selectRecentItems(projectCandidates);
-
 const toastItems: ToastItem[] = [
   ...recentNotes.map((item) => ({ ...item, kind: "Writing" as const })),
-  ...recentProjects.map((item) => ({ ...item, kind: "Project" as const })),
 ]
   .sort((a, b) => (b.date?.valueOf() ?? 0) - (a.date?.valueOf() ?? 0))
   .slice(0, MAX_TOASTS);
@@ -110,19 +86,13 @@ const hasToasts = toastItems.length > 0;
       >
         {toastItems.map((item, index) => (
           <div
-            class={`recent-toast ${
-              item.kind === "Writing"
-                ? "recent-toast--note"
-                : "recent-toast--project"
-            }`}
+            class="recent-toast recent-toast--note"
             style={`--toast-delay:${index * 0.12}s`}
             data-toast
           >
             <a
               href={item.href}
               class="recent-toast-link"
-              target={item.kind === "Project" ? "_blank" : undefined}
-              rel={item.kind === "Project" ? "noopener noreferrer" : undefined}
             >
               <span class="toast-dot" aria-hidden="true" />
               <div class="min-w-0">
