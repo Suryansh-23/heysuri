@@ -42,8 +42,8 @@ export const SOCIAL_LINKS: SocialLinks = {
     href: "mailto:heysuri@proton.me",
   },
   github: {
-    label: "GitHub",
-    href: "https://github.com/Suryansh-23",
+    label: "Telegram",
+    href: "https://t.me/suripuri23",
   },
   twitter: {
     label: "Twitter/X",
